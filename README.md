@@ -8,8 +8,8 @@ This project implements **Multiple Linear Regression (OLS)** against **5 distinc
 
 ## 🌐 Live Demo & Interactive Web Application
 
-🐙 **GitHub Repository**: **[https://github.com/huanchen1107/AIoT-DIC2-MultipleLR](https://github.com/huanchen1107/AIoT-DIC2-MultipleLR)**  
-🔗 **Live Demo (GitHub Pages)**: **[https://huanchen1107.github.io/AIoT-DIC2-MultipleLR/](https://huanchen1107.github.io/AIoT-DIC2-MultipleLR/)**
+🐙 **GitHub Repository**: **[https://github.com/jiajun1014/AIoT-DIC2-MultipleLR](https://github.com/jiajun1014/AIoT-DIC2-MultipleLR)**  
+🔗 **Live Demo (GitHub Pages)**: **[https://jiajun1014.github.io/AIoT-DIC2-MultipleLR/](https://jiajun1014.github.io/AIoT-DIC2-MultipleLR/)**
 
 ![AIoT Multiple Linear Regression Dashboard](dashboard_demo.png)
 
