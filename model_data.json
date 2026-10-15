@@ -13,7 +13,7 @@
       "f_pvalue": 1.562780498298018e-25,
       "coefficients": [
         {
-          "feature": "Intercept (\u03b2\u2080)",
+          "feature": "Intercept (β₀)",
           "coef": 48416.29766138503,
           "stderr": 2842.7166679428005,
           "tstat": 17.031700066128167,
@@ -30,7 +30,7 @@
           "pvalue": 1.5627804982980033e-25,
           "ci_lower": 0.7841253560995813,
           "ci_upper": 0.9191202436562933,
-          "vif": 1.0
+          "vif": 1
         }
       ],
       "outliers": [
@@ -140,7 +140,7 @@
       "f_pvalue": 9.649812292514453e-25,
       "coefficients": [
         {
-          "feature": "Intercept (\u03b2\u2080)",
+          "feature": "Intercept (β₀)",
           "coef": 46346.33876123651,
           "stderr": 2971.2364627984716,
           "tstat": 15.598334007245258,
@@ -278,7 +278,7 @@
       "f_pvalue": 1.9796143371684127e-23,
       "coefficients": [
         {
-          "feature": "Intercept (\u03b2\u2080)",
+          "feature": "Intercept (β₀)",
           "coef": 46100.29130552136,
           "stderr": 3147.8386571084698,
           "tstat": 14.645061684282128,
@@ -427,7 +427,7 @@
       "f_pvalue": 3.19455930535362e-22,
       "coefficients": [
         {
-          "feature": "Intercept (\u03b2\u2080)",
+          "feature": "Intercept (β₀)",
           "coef": 46329.060178554624,
           "stderr": 3375.8730047980134,
           "tstat": 13.72357908982616,
@@ -587,11 +587,11 @@
       "f_pvalue": 3.907703841869235e-21,
       "coefficients": [
         {
-          "feature": "Intercept (\u03b2\u2080)",
+          "feature": "Intercept (β₀)",
           "coef": 42554.16761774076,
           "stderr": 8358.538206698837,
           "tstat": 5.091101645457132,
-          "pvalue": 1.3086760335156738e-05,
+          "pvalue": 0.000013086760335156738,
           "ci_lower": 25567.574241254675,
           "ci_upper": 59540.76099422684,
           "vif": null
@@ -755,7 +755,7 @@
       "f_pvalue": 1.562780498298018e-25,
       "coefficients": [
         {
-          "feature": "Intercept (\u03b2\u2080)",
+          "feature": "Intercept (β₀)",
           "coef": 48416.29766138503,
           "stderr": 2842.7166679428005,
           "tstat": 17.031700066128167,
@@ -772,7 +772,7 @@
           "pvalue": 1.5627804982980033e-25,
           "ci_lower": 0.7841253560995813,
           "ci_upper": 0.9191202436562933,
-          "vif": 1.0
+          "vif": 1
         }
       ],
       "outliers": [
@@ -882,7 +882,7 @@
       "f_pvalue": 9.649812292514453e-25,
       "coefficients": [
         {
-          "feature": "Intercept (\u03b2\u2080)",
+          "feature": "Intercept (β₀)",
           "coef": 46346.33876123651,
           "stderr": 2971.2364627984716,
           "tstat": 15.598334007245258,
@@ -1020,11 +1020,11 @@
       "f_pvalue": 1.8474317896878233e-23,
       "coefficients": [
         {
-          "feature": "Intercept (\u03b2\u2080)",
+          "feature": "Intercept (β₀)",
           "coef": 42989.008165086736,
           "stderr": 7919.772517103607,
           "tstat": 5.4280609793080945,
-          "pvalue": 4.041216456576337e-06,
+          "pvalue": 0.000004041216456576337,
           "ci_lower": 26926.96503401907,
           "ci_upper": 59051.0512961544,
           "vif": null
@@ -1169,11 +1169,11 @@
       "f_pvalue": 2.9014566723283723e-22,
       "coefficients": [
         {
-          "feature": "Intercept (\u03b2\u2080)",
+          "feature": "Intercept (β₀)",
           "coef": 42410.30908342102,
           "stderr": 8223.431866814515,
           "tstat": 5.157251834792591,
-          "pvalue": 9.970354548171363e-06,
+          "pvalue": 0.000009970354548171363,
           "ci_lower": 25715.854853174358,
           "ci_upper": 59104.76331366769,
           "vif": null
@@ -1329,11 +1329,11 @@
       "f_pvalue": 3.907703841869268e-21,
       "coefficients": [
         {
-          "feature": "Intercept (\u03b2\u2080)",
+          "feature": "Intercept (β₀)",
           "coef": 42554.16761773236,
           "stderr": 8358.538206708887,
           "tstat": 5.091101645450006,
-          "pvalue": 1.3086760335435364e-05,
+          "pvalue": 0.000013086760335435364,
           "ci_lower": 25567.574241225855,
           "ci_upper": 59540.760994238866,
           "vif": null
@@ -1497,7 +1497,7 @@
       "f_pvalue": 1.562780498298018e-25,
       "coefficients": [
         {
-          "feature": "Intercept (\u03b2\u2080)",
+          "feature": "Intercept (β₀)",
           "coef": 48416.29766138503,
           "stderr": 2842.7166679428005,
           "tstat": 17.031700066128167,
@@ -1514,7 +1514,7 @@
           "pvalue": 1.5627804982980033e-25,
           "ci_lower": 0.7841253560995813,
           "ci_upper": 0.9191202436562933,
-          "vif": 1.0
+          "vif": 1
         }
       ],
       "outliers": [
@@ -1624,7 +1624,7 @@
       "f_pvalue": 9.649812292514453e-25,
       "coefficients": [
         {
-          "feature": "Intercept (\u03b2\u2080)",
+          "feature": "Intercept (β₀)",
           "coef": 46346.33876123651,
           "stderr": 2971.2364627984716,
           "tstat": 15.598334007245258,
@@ -1762,11 +1762,11 @@
       "f_pvalue": 1.8474317896878233e-23,
       "coefficients": [
         {
-          "feature": "Intercept (\u03b2\u2080)",
+          "feature": "Intercept (β₀)",
           "coef": 42989.008165086736,
           "stderr": 7919.772517103607,
           "tstat": 5.4280609793080945,
-          "pvalue": 4.041216456576337e-06,
+          "pvalue": 0.000004041216456576337,
           "ci_lower": 26926.96503401907,
           "ci_upper": 59051.0512961544,
           "vif": null
@@ -1911,11 +1911,11 @@
       "f_pvalue": 2.87193703308411e-22,
       "coefficients": [
         {
-          "feature": "Intercept (\u03b2\u2080)",
+          "feature": "Intercept (β₀)",
           "coef": 42922.432340501306,
           "stderr": 8020.39679766689,
           "tstat": 5.351659453181583,
-          "pvalue": 5.529625873991323e-06,
+          "pvalue": 0.000005529625873991323,
           "ci_lower": 26640.16121384409,
           "ci_upper": 59204.70346715852,
           "vif": null
@@ -2071,11 +2071,11 @@
       "f_pvalue": 3.907703841869268e-21,
       "coefficients": [
         {
-          "feature": "Intercept (\u03b2\u2080)",
+          "feature": "Intercept (β₀)",
           "coef": 42554.16761773236,
           "stderr": 8358.538206708887,
           "tstat": 5.091101645450006,
-          "pvalue": 1.3086760335435364e-05,
+          "pvalue": 0.000013086760335435364,
           "ci_lower": 25567.574241225855,
           "ci_upper": 59540.760994238866,
           "vif": null
@@ -2239,7 +2239,7 @@
       "f_pvalue": 1.562780498298018e-25,
       "coefficients": [
         {
-          "feature": "Intercept (\u03b2\u2080)",
+          "feature": "Intercept (β₀)",
           "coef": 48416.29766138503,
           "stderr": 2842.7166679428005,
           "tstat": 17.031700066128167,
@@ -2256,7 +2256,7 @@
           "pvalue": 1.5627804982980033e-25,
           "ci_lower": 0.7841253560995813,
           "ci_upper": 0.9191202436562933,
-          "vif": 1.0
+          "vif": 1
         }
       ],
       "outliers": [
@@ -2366,7 +2366,7 @@
       "f_pvalue": 9.649812292514453e-25,
       "coefficients": [
         {
-          "feature": "Intercept (\u03b2\u2080)",
+          "feature": "Intercept (β₀)",
           "coef": 46346.33876123651,
           "stderr": 2971.2364627984716,
           "tstat": 15.598334007245258,
@@ -2504,11 +2504,11 @@
       "f_pvalue": 1.8474317896878538e-23,
       "coefficients": [
         {
-          "feature": "Intercept (\u03b2\u2080)",
+          "feature": "Intercept (β₀)",
           "coef": 42989.00816508674,
           "stderr": 7919.7725171036,
           "tstat": 5.4280609793081,
-          "pvalue": 4.041216456576278e-06,
+          "pvalue": 0.000004041216456576278,
           "ci_lower": 26926.965034019093,
           "ci_upper": 59051.051296154394,
           "vif": null
@@ -2653,11 +2653,11 @@
       "f_pvalue": 2.901456672328411e-22,
       "coefficients": [
         {
-          "feature": "Intercept (\u03b2\u2080)",
+          "feature": "Intercept (β₀)",
           "coef": 42410.3090834211,
           "stderr": 8223.43186681452,
           "tstat": 5.157251834792597,
-          "pvalue": 9.970354548171222e-06,
+          "pvalue": 0.000009970354548171222,
           "ci_lower": 25715.854853174427,
           "ci_upper": 59104.763313667776,
           "vif": null
@@ -2813,11 +2813,11 @@
       "f_pvalue": 3.9077038418692605e-21,
       "coefficients": [
         {
-          "feature": "Intercept (\u03b2\u2080)",
+          "feature": "Intercept (β₀)",
           "coef": 42554.16761773238,
           "stderr": 8358.53820670888,
           "tstat": 5.0911016454500135,
-          "pvalue": 1.3086760335435102e-05,
+          "pvalue": 0.000013086760335435102,
           "ci_lower": 25567.57424122589,
           "ci_upper": 59540.76099423887,
           "vif": null
@@ -2981,7 +2981,7 @@
       "f_pvalue": 1.562780498298018e-25,
       "coefficients": [
         {
-          "feature": "Intercept (\u03b2\u2080)",
+          "feature": "Intercept (β₀)",
           "coef": 48416.29766138503,
           "stderr": 2842.7166679428005,
           "tstat": 17.031700066128167,
@@ -2998,7 +2998,7 @@
           "pvalue": 1.5627804982980033e-25,
           "ci_lower": 0.7841253560995813,
           "ci_upper": 0.9191202436562933,
-          "vif": 1.0
+          "vif": 1
         }
       ],
       "outliers": [
@@ -3108,7 +3108,7 @@
       "f_pvalue": 9.649812292514453e-25,
       "coefficients": [
         {
-          "feature": "Intercept (\u03b2\u2080)",
+          "feature": "Intercept (β₀)",
           "coef": 46346.33876123651,
           "stderr": 2971.2364627984716,
           "tstat": 15.598334007245258,
@@ -3246,11 +3246,11 @@
       "f_pvalue": 1.0160938908645198e-22,
       "coefficients": [
         {
-          "feature": "Intercept (\u03b2\u2080)",
+          "feature": "Intercept (β₀)",
           "coef": 48524.91882908621,
           "stderr": 7726.0638401926335,
           "tstat": 6.280677953584751,
-          "pvalue": 2.9348748277097483e-07,
+          "pvalue": 2.9348748277097483e-7,
           "ci_lower": 32855.735103599545,
           "ci_upper": 64194.10255457287,
           "vif": null
@@ -3395,11 +3395,11 @@
       "f_pvalue": 1.595225277281831e-21,
       "coefficients": [
         {
-          "feature": "Intercept (\u03b2\u2080)",
+          "feature": "Intercept (β₀)",
           "coef": 48444.527070989556,
           "stderr": 8029.630615580648,
           "tstat": 6.033219881495929,
-          "pvalue": 6.981305051177266e-07,
+          "pvalue": 6.981305051177266e-7,
           "ci_lower": 32143.5102973776,
           "ci_upper": 64745.54384460151,
           "vif": null
@@ -3555,11 +3555,11 @@
       "f_pvalue": 3.907703841869268e-21,
       "coefficients": [
         {
-          "feature": "Intercept (\u03b2\u2080)",
+          "feature": "Intercept (β₀)",
           "coef": 42554.16761773236,
           "stderr": 8358.538206708887,
           "tstat": 5.091101645450006,
-          "pvalue": 1.3086760335435364e-05,
+          "pvalue": 0.000013086760335435364,
           "ci_lower": 25567.574241225855,
           "ci_upper": 59540.760994238866,
           "vif": null

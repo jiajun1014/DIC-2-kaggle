@@ -1,132 +1,106 @@
-# 50 Startups: Multiple Linear Regression & Feature Selection Explorer
+# AIoT CRISP-DM Multiple Linear Regression & Feature Selection Explorer
 
-An interactive machine learning, statistical inference, and full-stack web platform built with the **Flask framework** and following the **CRISP-DM** (Cross-Industry Standard Process for Data Mining) methodology.
+An interactive machine learning, statistical inference, and full-stack web platform built following the **CRISP-DM** (Cross-Industry Standard Process for Data Mining) methodology.
 
-This project evaluates **Multiple Linear Regression (OLS)** against **5 distinct feature selection algorithms** to uncover the optimal feature subset for predicting startup profitability while guarding against multicollinearity and overfitting.
+This project implements **Multiple Linear Regression (OLS)** against **5 distinct feature selection algorithms** (Lasso, Forward SFS, RFE, ElasticNet, Exhaustive Search), supporting multiple business problems and arbitrary dataset input with real-time in-browser training.
 
 ---
 
 ## 🌐 Live Demo & Interactive Web Application
 
 🐙 **GitHub Repository**: **[https://github.com/huanchen1107/AIoT-DIC2-MultipleLR](https://github.com/huanchen1107/AIoT-DIC2-MultipleLR)**  
-🔗 **Live Demo**: **[https://huanchen1107.github.io/AIoT-DIC2-MultipleLR/](https://huanchen1107.github.io/AIoT-DIC2-MultipleLR/)**
+🔗 **Live Demo (GitHub Pages)**: **[https://huanchen1107.github.io/AIoT-DIC2-MultipleLR/](https://huanchen1107.github.io/AIoT-DIC2-MultipleLR/)**
 
-![50 Startups Interactive Regression & Feature Selection Explorer](dashboard_demo.png)
+![AIoT Multiple Linear Regression Dashboard](dashboard_demo.png)
 
-The web application is styled with the professional SaaS statistical calculator layout inspired by [StatsUnlock](https://statsunlock.com/multiple-linear-regression-calculator/).
-
-### How to Run Locally with Flask:
-1. **Install Dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-2. **Start the Flask Application**:
-   ```bash
-   python app.py
-   ```
-   Open your browser and navigate to: **[http://localhost:5000/](http://localhost:5000/)**
-
-### Flask REST API Endpoints:
-- `GET /`: Renders the main interactive regression explorer dashboard.
-- `GET /api/models`: Returns the complete 5-algorithm feature selection evaluation data ($k=1 \dots 5$).
-- `POST /api/predict`: Live inference endpoint calculating predicted profit and formula contribution breakdown:
-  ```json
-  {
-    "algo": "Lasso",
-    "k": 2,
-    "rd_spend": 100000,
-    "marketing_spend": 150000,
-    "admin_spend": 120000,
-    "state": "California"
-  }
-  ```
-- `GET /api/summary`: Returns summary metrics across all algorithms.
-
-### Key Web App Features:
-- **Algorithm Switcher**: Switch dynamically between Lasso (L1), Forward SFS, RFE, ElasticNet, Exhaustive Search, or **Compare All 5 Simultaneously**.
-- **Interactive Feature Count Slider ($k=1 \dots 5$)**: Instantly observe model metrics and equation changes across different subset sizes.
-- **Dual-Panel Responsive Charts**: Interactive Chart.js visualizations for **"RMSE by Number of Features"** and **"R-squared by Number of Features"** with sweet-spot highlighting and hover tooltips.
-- **Dynamic Regression Equation**: Live mathematical formula updating in real-time as predictors are added or removed.
-- **StatsUnlock-Style Coefficients Table**: Full inferential statistics including $\beta$ coefficients, Standard Error, $t$-values, $p$-values, 95% Confidence Intervals, and VIF (Variance Inflation Factor).
-- **Live Startup Profit Predictor**: Interactive input sliders for R&D Spend, Administration, Marketing Spend, and State with instant profit calculations.
-- **Top 10 Outliers & Residuals Diagnostic Table**: Detailed residual analysis for out-of-sample test cases.
+Styled with the professional SaaS statistical calculator layout inspired by [StatsUnlock](https://statsunlock.com/multiple-linear-regression-calculator/).
 
 ---
 
-## 📊 Core Empirical Findings
+## 🌟 作業加分亮點功能 (Bonus Criteria Achieved)
 
-### 1. The 2-Feature Sweet Spot ($k=2$)
-Across all 5 feature selection algorithms, the model consistently converges on **`['R&D Spend', 'Marketing Spend']`** as the optimal subset:
-- **Minimum Test RMSE**: **`$8,198.80`** (lowest error across all tested models)
-- **Peak Test $R^2$**: **`0.9474`** (explains 94.74% of startup profit variation)
-- **R&D Dominance**: Alone, R&D spend accounts for over $94.6\%$ of profit variation ($k=1$: $R^2 = 0.9465$, $\text{RMSE} = \$8,274.87$). Adding Marketing Spend provides complementary positive predictive lift.
+### 1. 📌 下拉選單呈現兩種 Problem（加總分 1分）
+儀表板頂端設有直覺的 **選擇題目 (Problem Selector)** 下拉選單，可在多個經典分析題目間即時無縫切換：
+- **Problem 1: 50 Startups 獲利預測 (Kaggle 多元線性回歸 - CRISP-DM)**
+  - 目標變數：`Profit`（新創公司利潤 $）
+  - 特徵變數：`R&D Spend`, `Administration`, `Marketing Spend`, `State`（類別變數經 One-Hot Encoding）
+  - 核心發現：驗證 $k=2$（`R&D Spend` + `Marketing Spend`）為最佳精簡模型（Occam's Razor），$k=5$ 產生 Overfitting Cliff 誤差暴增。
+- **Problem 2: 台積電 2330.TW 股價預測 (自回歸 Auto-Regression - CRISP-DM)**
+  - 目標變數：`Close Price`（當日收盤價 NT$）
+  - 特徵變數：時間延遲價格項（`Lag 1 昨日收盤`, `Lag 2 前日收盤`, `Lag 3`, `Lag 5`, `MA 5 五日均線`）
+  - 核心發現：驗證時間序列中 $k=2$（`Lag 1` + `MA 5`）提供最佳低誤差泛化能力，$k=5$ 時因相鄰交易日高自相關導致嚴重共線性（VIF > 10）。
 
-### 2. The 5-Feature Overfitting Cliff ($k=5$)
-Adding redundant variables (`Administration` and location dummies `State_Florida`, `State_New York`) introduces noise and multicollinearity:
-- **Test RMSE Spikes**: from **`$8,198.80`** to **`$9,137.99`** ($+\$939$ penalty!)
-- **$R^2$ Degrades**: drops to **`0.9347`**
-- **Principle of Parsimony (Occam's Razor)**: The simpler 2-variable model outperforms the full 5-variable model in predictive accuracy, interpretability, and generalizability.
+### 2. 🌐 可任意輸入 Dataset 進行即時建模（加總分 2分）
+平台內建強大的 **Arbitrary Dataset Live CRISP-DM Studio**，支援多種資料來源：
+- **自訂公開 URL 輸入**：可任意輸入任何 CSV 網址（如 GitHub Raw CSV，預設範例：`https://raw.githubusercontent.com/Avik-Jain/100-Days-Of-ML-Code/master/datasets/50_Startups.csv`）
+- **內建一鍵範例 (Presets)**：
+  - 🏢 50 Startups (Avik Jain)
+  - 📈 台積電 2330.TW Auto-Regression (`tsmc_2330_stock.csv`)
+  - 🏠 Boston Housing 波士頓房價回歸 (`BostonHousing.csv`)
+  - 💼 50 Startups (Ganesh Gist)
+- **本機 CSV 檔案上傳**：直接選取電腦上的 `.csv` 檔案，徹底免除 CORS 跨網域限制。
+- **貼上 CSV 文字**：彈出式視窗可直接貼入 CSV 內容立即分析。
+- **瀏覽器端全自動 CRISP-DM 引擎**：
+  1. **Data Understanding**：自動解析欄位型態、樣本筆數、數值特徵與類別特徵統計。
+  2. **Data Preparation**：動態自選預測目標變數 $y$；類別欄位自動執行 One-Hot Encoding 並主動剔除一項基準變數以杜絕 **Dummy Variable Trap**（虛擬變數陷阱）；執行 80/20 Train-Test 拆分。
+  3. **Modeling**：透過矩陣正規方程 $\beta = (X^T X)^{-1} X^T y$ 執行 OLS 求解。
+  4. **Feature Selection**：執行 Forward Stepwise 特徵選取（$k=1 \dots K$），即時輸出 RMSE、$R^2$、Adjusted $R^2$、MAE、F-Statistic、參數估計值、標準誤、t 統計量、p-value 及 VIF 共線性指標。
+  5. **Deployment**：動態為選定特徵生成滑桿拉桿，支援即時數值預測與殘差診斷表。
 
 ---
 
-## 🔬 Comparison of the 5 Feature Selection Algorithms
+## 💻 本機執行方式 (Local Execution)
 
-All 5 methods were benchmarked across $k=1 \dots 5$ features on the out-of-sample test set:
+### 方式一：純靜態網站（同 GitHub Pages）
+直接以瀏覽器開啟 `index.html`，或使用任何靜態伺服器：
+```bash
+python -m http.server 8000
+```
+開啟瀏覽器至 **[http://localhost:8000/](http://localhost:8000/)**
 
-| Feature Selection Algorithm | $k=1$ (RMSE) | $k=2$ (RMSE) | $k=3$ (RMSE) | $k=4$ (RMSE) | $k=5$ (RMSE) | Best Feature Subset |
-| :--- | :---: | :---: | :---: | :---: | :---: | :--- |
-| **Lasso (L1 Ranking)** | $8,274.87 | **$8,198.80** | $8,309.06 | $8,409.92 | $9,137.99 | `['R&D Spend', 'Marketing Spend']` |
-| **Forward SFS** | $8,274.87 | **$8,198.80** | $8,803.78 | $8,997.20 | $9,137.99 | `['R&D Spend', 'Marketing Spend']` |
-| **RFE** | $8,274.87 | **$8,198.80** | $8,803.78 | $9,068.54 | $9,137.99 | `['R&D Spend', 'Marketing Spend']` |
-| **ElasticNet Ranking** | $8,274.87 | **$8,198.80** | $8,803.78 | $8,997.20 | $9,137.99 | `['R&D Spend', 'Marketing Spend']` |
-| **Exhaustive (Best Subset)** | $8,274.87 | $8,198.80 | **$8,171.65** | $8,178.37 | $9,137.99 | `['R&D Spend', 'Admin', 'State_FL']` |
+### 方式二：Flask 全端應用
+```bash
+pip install -r requirements.txt
+python app.py
+```
+開啟瀏覽器至 **[http://localhost:5000/](http://localhost:5000/)**
+
+### Flask REST API:
+- `GET /api/problems`: 取得目前註冊的分析題目清單。
+- `GET /api/models?problem=50_startups&algo=Lasso`: 取得各特徵數評估數據。
+- `POST /api/predict`: 即時推論端點，支援 50 Startups 與 TSMC 2330.TW 參數。
 
 ---
 
-## 📁 Repository Structure
+## 📊 核心實證發現 (Core Findings)
+
+| 分析主題 | 最佳精簡特徵數 ($k$) | 最佳特徵組合 | 最低 Test RMSE | 最高 Test $R^2$ | 過度配適警告 ($k=5$) |
+| :--- | :---: | :--- | :---: | :---: | :--- |
+| **50 Startups** | **$k=2$** | `['R&D Spend', 'Marketing Spend']` | **$8,198.80** | **0.9474** | RMSE 暴增至 $9,137.99 |
+| **TSMC 2330.TW** | **$k=2$** | `['Lag_1 (Yesterday)', 'MA_5 (5-Day MA)']` | **4.68 NT$** | **0.9852** | VIF > 10，相鄰價格高度共線性 |
+
+---
+
+## 📁 檔案架構
 
 ```text
-├── dashboard_demo.png                  # Dashboard screenshot in README
-├── app.py                              # Flask Web Application (WSGI entrypoint & REST API)
-├── api/
-│   └── index.py                        # Vercel Serverless Function entry point
+├── index.html                          # GitHub Pages 主儀表板（含下拉選單與即時資料集分析）
+├── model_data.js                       # 跨問題資料集登錄檔（50 Startups & TSMC 2330.TW）
+├── tsmc_2330_stock.csv                 # 台積電歷史自回歸特徵資料集
+├── app.py                              # Flask 後端伺服器與 REST API
 ├── templates/
-│   └── index.html                      # StatsUnlock-style Jinja2 web template
+│   └── index.html                      # Flask 模板
 ├── static/
-│   └── model_data.js                   # Static data asset for instant frontend fallback
-├── model_data.json                     # Comprehensive model statistics, weights, and tests
-├── vercel.json                         # Vercel deployment configuration
-├── requirements.txt                    # Project dependencies (Flask, NumPy, Pandas, etc.)
-├── main.py                             # CRISP-DM CLI multiple linear regression script
-├── feature_progression_analysis.py     # Script generating k=1..5 metrics and charts
-├── all_5_algorithms_comparison_plot.png# Comparison chart of all 5 algorithms
-└── README.md                           # Documentation and project manual
+│   └── model_data.js                   # 靜態資源同步檔
+├── main.py                             # Python CRISP-DM 終端分析腳本
+├── feature_progression_analysis.py     # 特徵選取分析腳本
+└── README.md                           # 專案手冊與加分說明
 ```
 
 ---
 
-## ☁️ Deployment
+## 🙏 參考資料與致謝 (Acknowledgments)
 
-### 1. GitHub Pages (Active)
-🔗 **[https://huanchen1107.github.io/AIoT-DIC2-MultipleLR/](https://huanchen1107.github.io/AIoT-DIC2-MultipleLR/)**
-Automated deployment via `.github/workflows/pages.yml`.
-
-### 2. Vercel
-Configured for zero-config Vercel Python serverless deployment via `api/index.py` and `vercel.json`.
-
----
-
-## 🙏 Acknowledgments & References
-
-We gratefully acknowledge the following references, datasets, and open-source tools:
-
-1. **Design & Layout Reference**:
-   - [StatsUnlock Multiple Linear Regression Calculator](https://statsunlock.com/multiple-linear-regression-calculator/): Inspired the SaaS aesthetic, coefficient tables, VIF multicollinearity gauges, and statistical reporting layout.
-2. **Dataset**:
-   - [50 Startups Dataset (Avik Jain 100-Days-Of-ML-Code)](https://raw.githubusercontent.com/Avik-Jain/100-Days-Of-ML-Code/master/datasets/50_Startups.csv).
-3. **Core Libraries**:
-   - [Flask](https://flask.palletsprojects.com/): Python micro web framework.
-   - [Scikit-learn](https://scikit-learn.org/): For LassoCV, ElasticNetCV, SequentialFeatureSelector, and RFE.
-   - [Statsmodels](https://www.statsmodels.org/): For OLS inference, $t$-tests, $p$-values, confidence intervals, and VIF calculations.
-   - [Chart.js](https://www.chartjs.org/): For responsive, interactive dual-panel line charts.
+1. **視覺介面與統計佈局參考**：[StatsUnlock Multiple Linear Regression Calculator](https://statsunlock.com/multiple-linear-regression-calculator/)
+2. **50 Startups 資料集**：[Avik Jain 100-Days-Of-ML-Code](https://raw.githubusercontent.com/Avik-Jain/100-Days-Of-ML-Code/master/datasets/50_Startups.csv)
+3. **分析方法論**：CRISP-DM (Cross-Industry Standard Process for Data Mining)

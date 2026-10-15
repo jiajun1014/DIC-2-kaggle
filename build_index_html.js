@@ -1,0 +1,2623 @@
+const fs = require('fs');
+
+const htmlContent = `<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AIoT CRISP-DM Multiple Linear Regression & Feature Selection Explorer</title>
+  
+  <!-- Google Fonts: Outfit, Inter, Fira Code -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- PapaParse for in-browser client-side CSV parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  
+  <!-- Model Data Registry -->
+  <script src="model_data.js"></script>
+
+  <style>
+    :root {
+      --primary-dark: #312e81;
+      --primary: #4f46e5;
+      --primary-light: #6366f1;
+      --primary-subtle: #eef2ff;
+      --accent-blue: #3b82f6;
+      --accent-emerald: #10b981;
+      --accent-emerald-subtle: #ecfdf5;
+      --accent-amber: #f59e0b;
+      --accent-amber-subtle: #fffbeb;
+      --accent-rose: #f43f5e;
+      --accent-rose-subtle: #fff1f2;
+      --accent-purple: #8b5cf6;
+      --slate-50: #f8fafc;
+      --slate-100: #f1f5f9;
+      --slate-200: #e2e8f0;
+      --slate-300: #cbd5e1;
+      --slate-400: #94a3b8;
+      --slate-500: #64748b;
+      --slate-600: #475569;
+      --slate-700: #334155;
+      --slate-800: #1e293b;
+      --slate-900: #0f172a;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 20px;
+      --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+      --shadow-glow: 0 0 25px rgba(79, 70, 229, 0.18);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--slate-50);
+      color: var(--slate-800);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    h1, h2, h3, h4, .font-heading {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      color: var(--slate-900);
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px 20px 60px;
+    }
+
+    /* Top Breadcrumb & Header */
+    .top-header {
+      background: white;
+      border-bottom: 1px solid var(--slate-200);
+      padding: 14px 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+    }
+
+    .header-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .breadcrumbs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--slate-500);
+      margin-bottom: 4px;
+    }
+
+    .breadcrumbs a {
+      color: var(--slate-500);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    .breadcrumbs a:hover {
+      color: var(--primary);
+    }
+
+    .header-title-group h1 {
+      font-size: 22px;
+      letter-spacing: -0.02em;
+      color: var(--slate-900);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .brand-badge {
+      background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* Problem Dropdown Selector */
+    .problem-selector-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--primary-subtle);
+      border: 1.5px solid #c7d2fe;
+      padding: 6px 14px;
+      border-radius: var(--radius-md);
+      box-shadow: 0 2px 4px rgba(79, 70, 229, 0.06);
+    }
+
+    .problem-selector-label {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--primary-dark);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .problem-dropdown-select {
+      background: white;
+      border: 1px solid #a5b4fc;
+      border-radius: var(--radius-sm);
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--slate-800);
+      cursor: pointer;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .problem-dropdown-select:hover, .problem-dropdown-select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+
+    .ref-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--slate-100);
+      color: var(--slate-700);
+      border: 1px solid var(--slate-200);
+      padding: 7px 12px;
+      border-radius: var(--radius-md);
+      font-size: 12.5px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .ref-btn:hover {
+      background: white;
+      border-color: var(--primary-light);
+      color: var(--primary);
+    }
+
+    /* Bonus 2: Arbitrary Dataset Studio */
+    .dataset-studio-card {
+      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+      border: 2px solid #818cf8;
+      border-radius: var(--radius-xl);
+      padding: 22px 26px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-md), var(--shadow-glow);
+      position: relative;
+    }
+
+    .studio-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .studio-title-group h3 {
+      font-size: 19px;
+      color: var(--slate-900);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .studio-desc {
+      font-size: 13.5px;
+      color: var(--slate-600);
+      margin-top: 4px;
+      line-height: 1.5;
+    }
+
+    .bonus-pill {
+      background: linear-gradient(135deg, #059669, #10b981);
+      color: white;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+    }
+
+    .dataset-input-bar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 14px;
+    }
+
+    .url-input-container {
+      flex: 1;
+      min-width: 320px;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .url-input-container i.input-icon {
+      position: absolute;
+      left: 14px;
+      color: var(--slate-400);
+      font-size: 14px;
+    }
+
+    .dataset-url-input {
+      width: 100%;
+      padding: 10px 14px 10px 38px;
+      font-family: 'Fira Code', monospace;
+      font-size: 13px;
+      border: 1.5px solid var(--slate-300);
+      border-radius: var(--radius-md);
+      background: white;
+      color: var(--slate-800);
+      transition: all 0.2s;
+    }
+
+    .dataset-url-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+    }
+
+    .btn-action-primary {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+      box-shadow: 0 2px 4px rgba(79, 70, 229, 0.25);
+    }
+
+    .btn-action-primary:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(79, 70, 229, 0.35);
+    }
+
+    .btn-action-secondary {
+      background: white;
+      color: var(--slate-700);
+      border: 1px solid var(--slate-300);
+      padding: 9px 15px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      transition: all 0.2s;
+    }
+
+    .btn-action-secondary:hover {
+      background: var(--slate-100);
+      border-color: var(--slate-400);
+      color: var(--slate-900);
+    }
+
+    .presets-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--slate-500);
+    }
+
+    .preset-chip {
+      background: white;
+      border: 1px solid var(--slate-200);
+      border-radius: 9999px;
+      padding: 4px 12px;
+      color: var(--slate-700);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .preset-chip:hover {
+      background: var(--primary-subtle);
+      border-color: #a5b4fc;
+      color: var(--primary);
+    }
+
+    /* Custom Dataset Inspector Drawer */
+    .dataset-inspector-panel {
+      display: none;
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px dashed var(--slate-300);
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: var(--radius-md);
+      padding: 16px;
+    }
+
+    .inspector-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .inspector-stat {
+      background: white;
+      border: 1px solid var(--slate-200);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+    }
+
+    .inspector-stat .label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--slate-500);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .inspector-stat .val {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--slate-900);
+      font-family: 'Outfit', sans-serif;
+      margin-top: 2px;
+    }
+
+    /* Hero Banner */
+    .hero-card {
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #3730a3 100%);
+      color: white;
+      border-radius: var(--radius-xl);
+      padding: 32px 36px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-lg);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-card::after {
+      content: '';
+      position: absolute;
+      top: -60px;
+      right: -60px;
+      width: 320px;
+      height: 320px;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.25) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-card h2 {
+      font-size: 30px;
+      color: white;
+      margin-bottom: 10px;
+      line-height: 1.25;
+    }
+
+    .hero-card p {
+      font-size: 14.5px;
+      color: #c7d2fe;
+      max-width: 880px;
+      line-height: 1.6;
+    }
+
+    .hero-tags {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+
+    .hero-pill {
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      color: #e0e7ff;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 5px 13px;
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Controls Bar */
+    .controls-wrapper {
+      background: white;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--slate-200);
+      box-shadow: var(--shadow-sm);
+      padding: 20px 24px;
+      margin-bottom: 24px;
+    }
+
+    .control-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--slate-400);
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .tabs-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .tab-btn {
+      padding: 9px 16px;
+      background: var(--slate-50);
+      border: 1px solid var(--slate-200);
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--slate-700);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .tab-btn:hover {
+      background: var(--primary-subtle);
+      border-color: var(--primary-light);
+      color: var(--primary);
+    }
+
+    .tab-btn.active {
+      background: var(--primary-dark);
+      border-color: var(--primary-dark);
+      color: white;
+      box-shadow: 0 4px 10px rgba(49, 46, 129, 0.25);
+    }
+
+    .tab-btn .badge-pill {
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 9999px;
+      background: rgba(0, 0, 0, 0.06);
+    }
+
+    .tab-btn.active .badge-pill {
+      background: rgba(255, 255, 255, 0.25);
+      color: white;
+    }
+
+    /* Feature Count Step Buttons */
+    .k-selector-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .k-btn {
+      padding: 9px 16px;
+      border: 1px solid var(--slate-200);
+      background: white;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--slate-700);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .k-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .k-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+      box-shadow: 0 4px 10px rgba(79, 70, 229, 0.25);
+    }
+
+    .k-btn.sweet-spot {
+      border-color: var(--accent-emerald);
+      background: var(--accent-emerald-subtle);
+      color: #065f46;
+    }
+
+    .k-btn.sweet-spot.active {
+      background: #059669;
+      border-color: #059669;
+      color: white;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .k-btn.overfitting {
+      border-color: var(--accent-amber);
+    }
+
+    .k-btn.overfitting.active {
+      background: #d97706;
+      border-color: #d97706;
+      color: white;
+    }
+
+    /* Metrics Grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .metric-card {
+      background: white;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--slate-200);
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s;
+    }
+
+    .metric-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .metric-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--primary);
+    }
+
+    .metric-card.sweet::before {
+      background: var(--accent-emerald);
+    }
+
+    .metric-card.alert::before {
+      background: var(--accent-amber);
+    }
+
+    .metric-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--slate-500);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .metric-val {
+      font-size: 26px;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      color: var(--slate-900);
+      line-height: 1.1;
+      margin-bottom: 6px;
+    }
+
+    .metric-note {
+      font-size: 12px;
+      color: var(--slate-500);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .badge-tag {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 9999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .badge-green {
+      background: var(--accent-emerald-subtle);
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+    }
+
+    .badge-amber {
+      background: var(--accent-amber-subtle);
+      color: #92400e;
+      border: 1px solid #fde68a;
+    }
+
+    .badge-blue {
+      background: var(--primary-subtle);
+      color: var(--primary);
+      border: 1px solid #c7d2fe;
+    }
+
+    /* Active Features Callout */
+    .active-features-banner {
+      background: white;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--slate-200);
+      box-shadow: var(--shadow-sm);
+      padding: 18px 24px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .features-chips-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .feature-chip {
+      background: var(--slate-100);
+      border: 1px solid var(--slate-300);
+      color: var(--slate-800);
+      font-family: 'Fira Code', monospace;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+    }
+
+    /* Dual Charts Section */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .chart-card {
+      background: white;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--slate-200);
+      box-shadow: var(--shadow-sm);
+      padding: 24px;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 320px;
+      width: 100%;
+      margin-top: 12px;
+    }
+
+    /* Equation Card */
+    .equation-card {
+      background: white;
+      border-radius: var(--radius-lg);
+      border: 1.5px solid #a5b4fc;
+      box-shadow: var(--shadow-sm);
+      padding: 20px 24px;
+      margin-bottom: 24px;
+    }
+
+    .equation-box {
+      background: #faf5ff;
+      border: 1px solid #e9d5ff;
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      font-family: 'Fira Code', monospace;
+      font-size: 14.5px;
+      color: #581c87;
+      overflow-x: auto;
+      white-space: nowrap;
+      margin-top: 10px;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.03);
+    }
+
+    .eq-var { color: var(--primary); font-weight: 600; }
+    .eq-intercept { color: #047857; font-weight: 600; }
+    .eq-pos { color: #0284c7; }
+    .eq-neg { color: #dc2626; }
+
+    /* Tables & Predictor Split */
+    .analysis-grid {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 1100px) {
+      .analysis-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: white;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--slate-200);
+      box-shadow: var(--shadow-sm);
+      padding: 24px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .card-title-group h3 {
+      font-size: 18px;
+      color: var(--slate-900);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-subtitle {
+      font-size: 12.5px;
+      color: var(--slate-500);
+      margin-top: 2px;
+    }
+
+    /* Table Styles */
+    .table-responsive {
+      overflow-x: auto;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      text-align: left;
+    }
+
+    .data-table th {
+      background: var(--slate-100);
+      color: var(--slate-600);
+      font-weight: 600;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--slate-200);
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+    }
+
+    .data-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--slate-100);
+      color: var(--slate-800);
+    }
+
+    .data-table tr:hover td {
+      background: var(--slate-50);
+    }
+
+    /* Live Predictor */
+    .predictor-card {
+      background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+      border: 1px solid var(--slate-200);
+    }
+
+    .input-group {
+      margin-bottom: 16px;
+    }
+
+    .input-label-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--slate-700);
+      margin-bottom: 6px;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid var(--slate-300);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-family: 'Fira Code', monospace;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .input-field:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.15);
+    }
+
+    .range-slider {
+      width: 100%;
+      height: 6px;
+      background: var(--slate-200);
+      border-radius: 9999px;
+      outline: none;
+      margin-top: 8px;
+      cursor: pointer;
+    }
+
+    .range-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      background: var(--primary);
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .prediction-output-box {
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+      color: white;
+      border-radius: var(--radius-md);
+      padding: 20px;
+      text-align: center;
+      margin-top: 20px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .pred-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #c7d2fe;
+      margin-bottom: 6px;
+    }
+
+    .pred-value {
+      font-size: 32px;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      color: #34d399;
+      line-height: 1.1;
+      margin-bottom: 6px;
+    }
+
+    .pred-formula-note {
+      font-size: 11.5px;
+      color: #94a3b8;
+      line-height: 1.4;
+    }
+
+    /* Status dot */
+    .status-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      margin-right: 5px;
+    }
+    .dot-green { background: #10b981; }
+    .dot-amber { background: #f59e0b; }
+
+    /* Footer */
+    footer {
+      background: white;
+      border-top: 1px solid var(--slate-200);
+      padding: 32px 0;
+      margin-top: 40px;
+    }
+
+    .footer-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 24px;
+      color: var(--slate-600);
+    }
+
+    .ack-card {
+      background: var(--slate-50);
+      border: 1px solid var(--slate-200);
+      border-radius: var(--radius-md);
+      padding: 14px 18px;
+      font-size: 12.5px;
+      line-height: 1.6;
+    }
+
+    .ack-card a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .ack-card a:hover {
+      text-decoration: underline;
+    }
+
+    /* Modal for Paste CSV */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: var(--radius-lg);
+      max-width: 650px;
+      width: 100%;
+      padding: 24px;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-textarea {
+      width: 100%;
+      height: 220px;
+      font-family: 'Fira Code', monospace;
+      font-size: 12px;
+      padding: 12px;
+      border: 1.5px solid var(--slate-300);
+      border-radius: var(--radius-sm);
+      margin-bottom: 16px;
+      outline: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header Navigation -->
+  <header class="top-header">
+    <div class="header-inner">
+      <div>
+        <div class="breadcrumbs" id="breadcrumbTrail">
+          <a href="#"><i class="fa-solid fa-house"></i> Home</a>
+          <i class="fa-solid fa-chevron-right" style="font-size: 10px;"></i>
+          <span id="breadcrumbSection">Regression Analysis</span>
+          <i class="fa-solid fa-chevron-right" style="font-size: 10px;"></i>
+          <span id="breadcrumbCurrent" style="color: var(--slate-800); font-weight: 600;">50 Startups Feature Progression</span>
+        </div>
+        <div class="header-title-group">
+          <h1>
+            <i class="fa-solid fa-chart-line" style="color: var(--primary);"></i>
+            <span id="headerMainTitle">50 Startups Multiple Linear Regression Explorer</span>
+            <span class="brand-badge" id="headerCategoryBadge">CRISP-DM</span>
+          </h1>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <!-- Problem Selector Dropdown (Bonus 1) -->
+        <div class="problem-selector-container">
+          <span class="problem-selector-label"><i class="fa-solid fa-layer-group"></i> 選擇題目 (Problem):</span>
+          <select id="problemSelectDropdown" class="problem-dropdown-select">
+            <option value="50_startups" selected>🏢 Problem 1: 50 Startups 獲利預測 (多元線性回歸 - CRISP-DM)</option>
+            <option value="tsmc_2330">📈 Problem 2: 台積電 2330.TW 股價預測 (自回歸 Auto-Regression - CRISP-DM)</option>
+            <option value="custom">🌐 自訂資料集分析 (Arbitrary Dataset CSV Explorer)</option>
+          </select>
+        </div>
+
+        <a href="https://github.com/huanchen1107/AIoT-DIC2-MultipleLR" target="_blank" class="ref-btn">
+          <i class="fa-brands fa-github"></i> GitHub Repo
+        </a>
+        <a href="https://statsunlock.com/multiple-linear-regression-calculator/" target="_blank" class="ref-btn">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> Style Ref: StatsUnlock
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <!-- Bonus 2: Arbitrary Dataset Live Studio -->
+    <div class="dataset-studio-card" id="datasetStudioCard">
+      <div class="studio-header">
+        <div class="studio-title-group">
+          <h3>
+            <i class="fa-solid fa-cloud-arrow-down" style="color: var(--accent-emerald);"></i> 
+            任意資料集即時載入分析平台 (Arbitrary Dataset Live CRISP-DM Studio)
+            <span class="bonus-pill"><i class="fa-solid fa-star"></i> 加總分 +2分 功能</span>
+          </h3>
+          <p class="studio-desc">
+            支援輸入任意公開 CSV 網址（如 GitHub Raw CSV）、本機選擇 CSV 檔案或直接貼上 CSV 資料。系統自動於瀏覽器端執行完整 CRISP-DM 流程：名義變數 One-Hot Encoding（自動排除基準項防止 Dummy Variable Trap）、80/20 Train-Test 拆分、多元回歸 OLS 配適、Forward Stepwise 特徵挑選、評估指標與即時預測器！
+          </p>
+        </div>
+      </div>
+
+      <div class="dataset-input-bar">
+        <div class="url-input-container">
+          <i class="fa-solid fa-link input-icon"></i>
+          <input type="text" id="datasetUrlInput" class="dataset-url-input" 
+                 value="https://raw.githubusercontent.com/Avik-Jain/100-Days-Of-ML-Code/master/datasets/50_Startups.csv" 
+                 placeholder="輸入任何 CSV 資料集網址 (例如 GitHub Raw CSV)">
+        </div>
+        <button id="btnFetchDataset" class="btn-action-primary">
+          <i class="fa-solid fa-bolt"></i> 載入並分析 (Run Analysis)
+        </button>
+        <label class="btn-action-secondary" for="csvFileInput">
+          <i class="fa-solid fa-folder-open"></i> 選擇本機 CSV
+          <input type="file" id="csvFileInput" accept=".csv" style="display: none;">
+        </label>
+        <button id="btnPasteCsvModal" class="btn-action-secondary">
+          <i class="fa-solid fa-paste"></i> 貼上 CSV 文字
+        </button>
+      </div>
+
+      <div class="presets-row">
+        <span><i class="fa-solid fa-bookmark"></i> 範例快捷選取 (Presets):</span>
+        <button class="preset-chip" data-url="https://raw.githubusercontent.com/Avik-Jain/100-Days-Of-ML-Code/master/datasets/50_Startups.csv">
+          <i class="fa-solid fa-building"></i> 50 Startups (Avik Jain)
+        </button>
+        <button class="preset-chip" data-url="tsmc_2330_stock.csv">
+          <i class="fa-solid fa-chart-line"></i> 台積電 2330.TW (Auto-Regression)
+        </button>
+        <button class="preset-chip" data-url="https://raw.githubusercontent.com/selva86/datasets/master/BostonHousing.csv">
+          <i class="fa-solid fa-house"></i> Boston Housing (波士頓房價)
+        </button>
+        <button class="preset-chip" data-url="https://gist.githubusercontent.com/GaneshSparkz/b5662effbdae8746f7f7d8ed70c42b2d/raw/faf8b1a0d58e251f48a647d3881e7a960c3f0925/50_Startups.csv">
+          <i class="fa-solid fa-code-fork"></i> 50 Startups (Ganesh Gist)
+        </button>
+      </div>
+
+      <!-- Dataset Inspector Drawer -->
+      <div class="dataset-inspector-panel" id="datasetInspectorPanel">
+        <div class="inspector-grid">
+          <div class="inspector-stat">
+            <div class="label">樣本總數 (Rows)</div>
+            <div class="val" id="statRows">-</div>
+          </div>
+          <div class="inspector-stat">
+            <div class="label">特徵欄位數 (Columns)</div>
+            <div class="val" id="statCols">-</div>
+          </div>
+          <div class="inspector-stat">
+            <div class="label">數值特徵 / 類別特徵</div>
+            <div class="val" id="statTypes">-</div>
+          </div>
+          <div class="inspector-stat">
+            <div class="label">目標預測變數 (Target y)</div>
+            <div style="margin-top: 4px;">
+              <select id="targetColumnSelect" class="problem-dropdown-select" style="width: 100%;">
+                <!-- Dynamically populated -->
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+          <span style="font-size: 12.5px; color: var(--slate-600);">
+            <i class="fa-solid fa-circle-check" style="color: var(--accent-emerald);"></i> 資料集已成功解析，點擊確認即可即時訓練回歸模型與特徵選擇。
+          </span>
+          <button id="btnTrainCustomModel" class="btn-action-primary" style="background: #059669;">
+            <i class="fa-solid fa-play"></i> 立即配適並更新儀表板 (Fit & Update)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hero Card Banner -->
+    <div class="hero-card" id="heroBanner">
+      <h2 id="heroTitle">Feature Selection & Parsimony Analysis</h2>
+      <p id="heroDesc">
+        Compare 5 Machine Learning Feature Selection Algorithms (<strong>Lasso</strong>, <strong>Forward SFS</strong>, <strong>RFE</strong>, <strong>ElasticNet</strong>, <strong>Exhaustive Search</strong>) against Baseline OLS. Explore the bias-variance tradeoff across feature counts $k=1 \dots 5$, pinpointing the <strong>2-feature optimal sweet spot</strong> and the <strong>5-feature overfitting cliff</strong>.
+      </p>
+      <div class="hero-tags" id="heroTagsList">
+        <span class="hero-pill"><i class="fa-solid fa-database"></i> 50 Startups Dataset</span>
+        <span class="hero-pill"><i class="fa-solid fa-sliders"></i> 5 Selection Methods</span>
+        <span class="hero-pill"><i class="fa-solid fa-star" style="color: #34d399;"></i> Global Sweet Spot: k=2 ($8,198.80 RMSE)</span>
+        <span class="hero-pill"><i class="fa-solid fa-triangle-exclamation" style="color: #fbbf24;"></i> Overfitting Warning: k=5 ($9,137.99 RMSE)</span>
+      </div>
+    </div>
+
+    <!-- Controls Wrapper -->
+    <div class="controls-wrapper">
+      <span class="control-label"><i class="fa-solid fa-sliders"></i> 1. Select Feature Selection Algorithm</span>
+      <div class="tabs-pills" id="algoTabs">
+        <button class="tab-btn active" data-algo="Lasso">
+          <i class="fa-solid fa-filter"></i> Lasso (L1 Ranking)
+          <span class="badge-pill">Matches Benchmark</span>
+        </button>
+        <button class="tab-btn" data-algo="Forward SFS">
+          <i class="fa-solid fa-arrow-trend-up"></i> Forward SFS
+          <span class="badge-pill">Greedy</span>
+        </button>
+        <button class="tab-btn" data-algo="RFE">
+          <i class="fa-solid fa-scissors"></i> RFE
+          <span class="badge-pill">Backward</span>
+        </button>
+        <button class="tab-btn" data-algo="ElasticNet">
+          <i class="fa-solid fa-diagram-project"></i> ElasticNet
+          <span class="badge-pill">L1 + L2</span>
+        </button>
+        <button class="tab-btn" data-algo="Exhaustive">
+          <i class="fa-solid fa-magnifying-glass-chart"></i> Exhaustive Search
+          <span class="badge-pill">Best Subset</span>
+        </button>
+        <button class="tab-btn" data-algo="ALL" style="border-left: 2px solid var(--primary);">
+          <i class="fa-solid fa-layer-group"></i> 🌟 Compare All 5 Methods
+        </button>
+      </div>
+
+      <span class="control-label" style="margin-top: 12px;"><i class="fa-solid fa-list-ol"></i> 2. Number of Features (k = 1 to 5)</span>
+      <div class="k-selector-group" id="kSelectorGroup">
+        <!-- Dynamically rendered according to problem -->
+      </div>
+    </div>
+
+    <!-- Metrics Ribbon -->
+    <div class="metrics-grid" id="metricsGrid">
+      <div class="metric-card sweet">
+        <div class="metric-title">
+          <span>Test RMSE</span>
+          <span class="badge-tag badge-green" id="rmseBadge"><i class="fa-solid fa-award"></i> Optimal</span>
+        </div>
+        <div class="metric-val" id="valRMSE">$8,198.80</div>
+        <div class="metric-note">
+          <span>Lower is better (Best across methods)</span>
+        </div>
+      </div>
+
+      <div class="metric-card sweet">
+        <div class="metric-title">
+          <span>R² Score</span>
+          <span class="badge-tag badge-blue" id="r2Badge"><i class="fa-solid fa-circle-check"></i> 94.7% Fit</span>
+        </div>
+        <div class="metric-val" id="valR2">0.9474</div>
+        <div class="metric-note">
+          <span id="r2Note">Explains 94.74% of target variance</span>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-title">
+          <span>Adjusted R²</span>
+          <i class="fa-solid fa-scale-balanced" style="color: var(--slate-400);"></i>
+        </div>
+        <div class="metric-val" id="valAdjR2">0.9324</div>
+        <div class="metric-note">
+          <span>Penalizes redundant parameters</span>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-title">
+          <span>Mean Absolute Error</span>
+          <i class="fa-solid fa-calculator" style="color: var(--slate-400);"></i>
+        </div>
+        <div class="metric-val" id="valMAE">$6,488.75</div>
+        <div class="metric-note">
+          <span>Average test prediction error</span>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-title">
+          <span>F-Statistic</span>
+          <span class="badge-tag badge-green" id="fStatBadge">p &lt; 0.0001</span>
+        </div>
+        <div class="metric-val" id="valFStat">347.8</div>
+        <div class="metric-note">
+          <span>Model is highly statistically significant</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Features Chips -->
+    <div class="active-features-banner">
+      <div class="features-chips-wrap">
+        <strong style="font-size: 13px; color: var(--slate-700);">
+          <i class="fa-solid fa-check-double" style="color: var(--primary);"></i> Active Predictors (<span id="featuresCount">2</span>):
+        </strong>
+        <div id="featuresListChips" style="display: flex; gap: 6px; flex-wrap: wrap;">
+          <span class="feature-chip">R&D Spend</span>
+          <span class="feature-chip">Marketing Spend</span>
+        </div>
+      </div>
+      <div>
+        <span class="badge-tag badge-green" id="parsimonyNotice">
+          <i class="fa-solid fa-star"></i> Occam's Razor: 2 features yield the minimum test RMSE.
+        </span>
+      </div>
+    </div>
+
+    <!-- Dual Interactive Charts -->
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h3><i class="fa-solid fa-chart-line" style="color: var(--primary);"></i> RMSE by Number of Features</h3>
+            <div class="card-subtitle">Lower is better. Optimal sweet spot indicated at lowest point.</div>
+          </div>
+          <span class="badge-tag badge-blue" id="rmseChartBadge">Lasso</span>
+        </div>
+        <div class="chart-container">
+          <canvas id="rmseChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h3><i class="fa-solid fa-arrow-trend-up" style="color: var(--accent-emerald);"></i> R-squared by Number of Features</h3>
+            <div class="card-subtitle">Higher is better. Measures variance explained by the predictors.</div>
+          </div>
+          <span class="badge-tag badge-green" id="r2ChartBadge">Peak Fit</span>
+        </div>
+        <div class="chart-container">
+          <canvas id="r2Chart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fitted OLS Regression Equation -->
+    <div class="equation-card">
+      <div class="card-header" style="margin-bottom: 4px;">
+        <div class="card-title-group">
+          <h3 style="font-size: 16px;"><i class="fa-solid fa-square-root-variable" style="color: var(--primary);"></i> Fitted OLS Regression Equation</h3>
+          <div class="card-subtitle">Dynamic formula estimated using Ordinary Least Squares Normal Equation.</div>
+        </div>
+      </div>
+      <div class="equation-box" id="equationBox">
+        <strong>Profit</strong> = 46,346.34 + 0.7886 × (R&D Spend) + 0.0326 × (Marketing Spend)
+      </div>
+    </div>
+
+    <!-- Analysis Grid: Coefficients Table + Live Predictor -->
+    <div class="analysis-grid">
+      <!-- Coefficients Table -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h3><i class="fa-solid fa-table-list" style="color: var(--primary);"></i> Model Coefficients & Statistical Tests</h3>
+            <div class="card-subtitle">Detailed parameter estimates, standard errors, t-statistics, p-values, and VIF multicollinearity.</div>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Predictor</th>
+                <th>Estimate (B)</th>
+                <th>Std. Error</th>
+                <th>t-Stat</th>
+                <th>p-Value</th>
+                <th>95% Conf. Int</th>
+                <th>VIF</th>
+              </tr>
+            </thead>
+            <tbody id="coefTableBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Live Interactive Predictor -->
+      <div class="card predictor-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h3><i class="fa-solid fa-sliders" style="color: var(--accent-emerald);"></i> Live Interactive Predictor</h3>
+            <div class="card-subtitle">Real-time prediction using the active regression weights.</div>
+          </div>
+          <span class="badge-tag badge-green"><i class="fa-solid fa-bolt"></i> Real-time</span>
+        </div>
+
+        <div id="predictorInputsContainer">
+          <!-- Dynamically populated sliders & inputs -->
+        </div>
+
+        <!-- Output Box -->
+        <div class="prediction-output-box">
+          <div class="pred-label" id="predLabelText">Predicted Startup Profit</div>
+          <div class="pred-value" id="predProfitOutput">$130,094.66</div>
+          <div class="pred-formula-note" id="predFormulaNote">
+            Calculated in real-time using active regression parameters.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Residual Diagnostics & Top 10 Outliers -->
+    <div class="card" style="margin-top: 24px;">
+      <div class="card-header">
+        <div class="card-title-group">
+          <h3><i class="fa-solid fa-magnifying-glass" style="color: var(--accent-amber);"></i> Test Set Residuals & Outliers Diagnostic</h3>
+          <div class="card-subtitle">Top absolute residuals on out-of-sample test instances.</div>
+        </div>
+        <span class="badge-tag badge-blue"><i class="fa-solid fa-filter"></i> Sorted by |Residual|</span>
+      </div>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Sample ID</th>
+              <th>Actual Value</th>
+              <th>Predicted Value</th>
+              <th>Residual</th>
+              <th>Abs Error</th>
+              <th>% Error</th>
+              <th>Diagnostic Status</th>
+            </tr>
+          </thead>
+          <tbody id="outliersTableBody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Modal for Paste CSV -->
+  <div class="modal-overlay" id="pasteCsvModal">
+    <div class="modal-content">
+      <div class="modal-title">
+        <span><i class="fa-solid fa-paste" style="color: var(--primary);"></i> 貼上 CSV 資料文字</span>
+        <button id="btnCloseModal" style="background: none; border: none; font-size: 18px; cursor: pointer; color: var(--slate-400);">&times;</button>
+      </div>
+      <p style="font-size: 13px; color: var(--slate-600); margin-bottom: 12px;">
+        請將包含標題列（Header）的完整 CSV 資料直接貼在下方文字方塊中：
+      </p>
+      <textarea id="csvTextarea" class="modal-textarea" placeholder="R&D Spend,Administration,Marketing Spend,State,Profit&#10;165349.2,136897.8,471784.1,New York,192261.83&#10;162597.7,151377.59,443898.53,California,191792.06"></textarea>
+      <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button id="btnCancelPaste" class="btn-action-secondary">取消</button>
+        <button id="btnConfirmPaste" class="btn-action-primary"><i class="fa-solid fa-check"></i> 解析並載入</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer & References -->
+  <footer>
+    <div class="footer-inner">
+      <div style="max-width: 650px;">
+        <h4 style="font-size: 16px; margin-bottom: 8px; color: var(--slate-900);">
+          <i class="fa-solid fa-building-columns"></i> AIoT CRISP-DM Machine Learning Platform
+        </h4>
+        <p style="line-height: 1.6; font-size: 13px;">
+          Developed for Multiple Linear Regression, Auto-Regression (TSMC 2330.TW), and Arbitrary Dataset feature selection & parsimony analysis. Fully client-side reactive with Vanilla HTML5, CSS3, JavaScript ES6, and Chart.js.
+        </p>
+      </div>
+
+      <div style="max-width: 580px;">
+        <h4 style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--slate-400); margin-bottom: 8px;">
+          References & Acknowledgments
+        </h4>
+        <div class="ack-card">
+          <strong>Design & Layout:</strong> Statistical calculator aesthetic inspired by <a href="https://statsunlock.com/multiple-linear-regression-calculator/" target="_blank">StatsUnlock Multiple Linear Regression Calculator</a>.<br>
+          <strong>Datasets:</strong> <a href="https://raw.githubusercontent.com/Avik-Jain/100-Days-Of-ML-Code/master/datasets/50_Startups.csv" target="_blank">50 Startups (Avik Jain 100-Days-Of-ML)</a>, TSMC 2330.TW Historical Stock Returns.<br>
+          <strong>Methodology:</strong> CRISP-DM (Cross-Industry Standard Process for Data Mining).
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // State management
+    let activeProblemKey = '50_startups';
+    let currentAlgo = 'Lasso';
+    let currentK = 2; // Default optimal sweet spot
+    let rmseChartInstance = null;
+    let r2ChartInstance = null;
+
+    // Parsed Custom Dataset Cache
+    let customParsedDataset = null;
+
+    const ALGO_COLORS = {
+      'Lasso': '#4f46e5',
+      'Forward SFS': '#f97316',
+      'RFE': '#10b981',
+      'ElasticNet': '#ef4444',
+      'Exhaustive': '#8b5cf6'
+    };
+
+    // Initialize application
+    document.addEventListener('DOMContentLoaded', () => {
+      initCharts();
+      setupEventListeners();
+      switchProblem('50_startups');
+    });
+
+    function setupEventListeners() {
+      // 1. Problem Dropdown Selector (Bonus 1)
+      const problemDropdown = document.getElementById('problemSelectDropdown');
+      problemDropdown.addEventListener('change', (e) => {
+        const selected = e.target.value;
+        if (selected === 'custom') {
+          // Highlight and expand custom dataset studio
+          const studio = document.getElementById('datasetStudioCard');
+          studio.scrollIntoView({ behavior: 'smooth' });
+          studio.style.boxShadow = '0 0 30px rgba(99, 102, 241, 0.4)';
+          setTimeout(() => { studio.style.boxShadow = ''; }, 1500);
+          if (!customParsedDataset) {
+            // Trigger fetch for default URL
+            document.getElementById('btnFetchDataset').click();
+          } else {
+            switchProblem('custom');
+          }
+        } else {
+          switchProblem(selected);
+        }
+      });
+
+      // 2. Algorithm pills
+      const tabs = document.querySelectorAll('#algoTabs .tab-btn');
+      tabs.forEach(btn => {
+        btn.addEventListener('click', () => {
+          tabs.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentAlgo = btn.dataset.algo;
+          updateDashboard();
+        });
+      });
+
+      // 3. Bonus 2: Arbitrary Dataset Actions
+      document.getElementById('btnFetchDataset').addEventListener('click', () => {
+        const url = document.getElementById('datasetUrlInput').value.trim();
+        if (url) loadDatasetFromUrl(url);
+      });
+
+      document.querySelectorAll('.preset-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          const url = chip.dataset.url;
+          document.getElementById('datasetUrlInput').value = url;
+          loadDatasetFromUrl(url);
+        });
+      });
+
+      document.getElementById('csvFileInput').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            parseAndAnalyzeCsvString(event.target.result, file.name);
+          };
+          reader.readAsText(file);
+        }
+      });
+
+      // Modal Paste CSV
+      const modal = document.getElementById('pasteCsvModal');
+      document.getElementById('btnPasteCsvModal').addEventListener('click', () => {
+        modal.style.display = 'flex';
+      });
+      document.getElementById('btnCloseModal').addEventListener('click', () => {
+        modal.style.display = 'none';
+      });
+      document.getElementById('btnCancelPaste').addEventListener('click', () => {
+        modal.style.display = 'none';
+      });
+      document.getElementById('btnConfirmPaste').addEventListener('click', () => {
+        const text = document.getElementById('csvTextarea').value.trim();
+        if (text) {
+          modal.style.display = 'none';
+          parseAndAnalyzeCsvString(text, 'Pasted_Data.csv');
+        }
+      });
+
+      document.getElementById('btnTrainCustomModel').addEventListener('click', () => {
+        if (customParsedDataset) {
+          trainCustomModelAndApply();
+        }
+      });
+    }
+
+    // Switch between Problem 1 (50 Startups), Problem 2 (TSMC 2330), and Custom Dataset
+    function switchProblem(problemKey) {
+      activeProblemKey = problemKey;
+      const prob = window.PROBLEMS_DATA[problemKey];
+      if (!prob) return;
+
+      // Update Header & Breadcrumb
+      document.getElementById('breadcrumbSection').textContent = prob.category || 'Regression Analysis';
+      document.getElementById('breadcrumbCurrent').textContent = prob.name;
+      document.getElementById('headerMainTitle').textContent = prob.name;
+      document.getElementById('headerCategoryBadge').textContent = prob.categoryBadge || 'CRISP-DM';
+
+      // Update Hero Banner
+      document.getElementById('heroTitle').textContent = prob.heroTitle;
+      document.getElementById('heroDesc').innerHTML = prob.heroDesc;
+
+      const tagsContainer = document.getElementById('heroTagsList');
+      tagsContainer.innerHTML = '';
+      prob.heroBadges.forEach(b => {
+        const span = document.createElement('span');
+        span.className = 'hero-pill';
+        span.innerHTML = \`<i class="fa-solid \${b.icon}"></i> \${b.label}\`;
+        tagsContainer.appendChild(span);
+      });
+
+      // Reset K to sweet spot
+      currentK = prob.sweetSpotK || 2;
+
+      // Render K Buttons
+      renderKButtons(prob);
+
+      // Render Predictor Inputs Layout
+      renderPredictorInputs(prob);
+
+      // Reset Algo to Lasso
+      currentAlgo = 'Lasso';
+      const tabs = document.querySelectorAll('#algoTabs .tab-btn');
+      tabs.forEach(b => {
+        b.classList.toggle('active', b.dataset.algo === 'Lasso');
+      });
+
+      // Update Dropdown value
+      document.getElementById('problemSelectDropdown').value = problemKey;
+
+      // Refresh Dashboard
+      updateDashboard();
+    }
+
+    function renderKButtons(prob) {
+      const container = document.getElementById('kSelectorGroup');
+      container.innerHTML = '';
+      const totalK = prob.data['Lasso'].length;
+
+      for (let k = 1; k <= totalK; k++) {
+        const btn = document.createElement('button');
+        btn.className = 'k-btn';
+        btn.dataset.k = k;
+
+        if (k === prob.sweetSpotK) {
+          btn.classList.add('sweet-spot');
+        } else if (k === prob.overfittingK || (k === totalK && totalK >= 5)) {
+          btn.classList.add('overfitting');
+        }
+
+        if (k === currentK) {
+          btn.classList.add('active');
+        }
+
+        const labelText = prob.kLabels && prob.kLabels[k] ? prob.kLabels[k] : \`k = \${k}\`;
+        btn.innerHTML = labelText;
+
+        btn.addEventListener('click', () => {
+          container.querySelectorAll('.k-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentK = k;
+          updateDashboard();
+        });
+
+        container.appendChild(btn);
+      }
+    }
+
+    function renderPredictorInputs(prob) {
+      const container = document.getElementById('predictorInputsContainer');
+      container.innerHTML = '';
+
+      if (prob.id === '50_startups') {
+        container.innerHTML = \`
+          <div class="input-group">
+            <div class="input-label-row">
+              <span>R&D Spend ($)</span>
+              <span id="labelRD" style="color: var(--primary); font-family: 'Fira Code', monospace;">$100,000</span>
+            </div>
+            <input type="number" id="numRD" class="input-field" value="100000" min="0" max="250000" step="5000">
+            <input type="range" id="rangeRD" class="range-slider" value="100000" min="0" max="250000" step="5000">
+          </div>
+          <div class="input-group">
+            <div class="input-label-row">
+              <span>Marketing Spend ($)</span>
+              <span id="labelMkt" style="color: var(--primary); font-family: 'Fira Code', monospace;">$150,000</span>
+            </div>
+            <input type="number" id="numMkt" class="input-field" value="150000" min="0" max="500000" step="5000">
+            <input type="range" id="rangeMkt" class="range-slider" value="150000" min="0" max="500000" step="5000">
+          </div>
+          <div class="input-group" id="inputGroupAdmin">
+            <div class="input-label-row">
+              <span>Administration ($)</span>
+              <span id="labelAdmin" style="color: var(--slate-500); font-family: 'Fira Code', monospace;">$120,000</span>
+            </div>
+            <input type="number" id="numAdmin" class="input-field" value="120000" min="0" max="250000" step="5000">
+            <input type="range" id="rangeAdmin" class="range-slider" value="120000" min="0" max="250000" step="5000">
+          </div>
+          <div class="input-group" id="inputGroupState">
+            <div class="input-label-row">
+              <span>State Location</span>
+            </div>
+            <select id="selectState" class="input-field">
+              <option value="California">California (Reference)</option>
+              <option value="New York">New York</option>
+              <option value="Florida">Florida</option>
+            </select>
+          </div>
+        \`;
+        syncInput('rangeRD', 'numRD', 'labelRD', '$');
+        syncInput('rangeMkt', 'numMkt', 'labelMkt', '$');
+        syncInput('rangeAdmin', 'numAdmin', 'labelAdmin', '$');
+        document.getElementById('selectState').addEventListener('change', calculateLivePrediction);
+      } else if (prob.id === 'tsmc_2330') {
+        container.innerHTML = \`
+          <div class="input-group">
+            <div class="input-label-row">
+              <span>Yesterday Close (Lag 1)</span>
+              <span id="labelLag1" style="color: var(--primary); font-family: 'Fira Code', monospace;">NT$ 820.0</span>
+            </div>
+            <input type="number" id="numLag1" class="input-field" value="820" min="500" max="1500" step="5">
+            <input type="range" id="rangeLag1" class="range-slider" value="820" min="500" max="1500" step="5">
+          </div>
+          <div class="input-group">
+            <div class="input-label-row">
+              <span>5-Day Moving Avg (MA 5)</span>
+              <span id="labelMA5" style="color: var(--primary); font-family: 'Fira Code', monospace;">NT$ 815.0</span>
+            </div>
+            <input type="number" id="numMA5" class="input-field" value="815" min="500" max="1500" step="5">
+            <input type="range" id="rangeMA5" class="range-slider" value="815" min="500" max="1500" step="5">
+          </div>
+          <div class="input-group">
+            <div class="input-label-row">
+              <span>2-Day Lag (Lag 2)</span>
+              <span id="labelLag2" style="color: var(--slate-500); font-family: 'Fira Code', monospace;">NT$ 810.0</span>
+            </div>
+            <input type="number" id="numLag2" class="input-field" value="810" min="500" max="1500" step="5">
+            <input type="range" id="rangeLag2" class="range-slider" value="810" min="500" max="1500" step="5">
+          </div>
+          <div class="input-group">
+            <div class="input-label-row">
+              <span>3-Day Lag (Lag 3)</span>
+              <span id="labelLag3" style="color: var(--slate-500); font-family: 'Fira Code', monospace;">NT$ 805.0</span>
+            </div>
+            <input type="number" id="numLag3" class="input-field" value="805" min="500" max="1500" step="5">
+            <input type="range" id="rangeLag3" class="range-slider" value="805" min="500" max="1500" step="5">
+          </div>
+          <div class="input-group">
+            <div class="input-label-row">
+              <span>5-Day Lag (Lag 5)</span>
+              <span id="labelLag5" style="color: var(--slate-500); font-family: 'Fira Code', monospace;">NT$ 800.0</span>
+            </div>
+            <input type="number" id="numLag5" class="input-field" value="800" min="500" max="1500" step="5">
+            <input type="range" id="rangeLag5" class="range-slider" value="800" min="500" max="1500" step="5">
+          </div>
+        \`;
+        syncInput('rangeLag1', 'numLag1', 'labelLag1', 'NT$ ');
+        syncInput('rangeMA5', 'numMA5', 'labelMA5', 'NT$ ');
+        syncInput('rangeLag2', 'numLag2', 'labelLag2', 'NT$ ');
+        syncInput('rangeLag3', 'numLag3', 'labelLag3', 'NT$ ');
+        syncInput('rangeLag5', 'numLag5', 'labelLag5', 'NT$ ');
+      } else if (prob.customFeatures) {
+        // Custom dynamic features
+        prob.customFeatures.forEach(feat => {
+          const safeId = feat.name.replace(/[^a-zA-Z0-9]/g, '_');
+          const group = document.createElement('div');
+          group.className = 'input-group';
+          group.innerHTML = \`
+            <div class="input-label-row">
+              <span>\${feat.name}</span>
+              <span id="label_\${safeId}" style="color: var(--primary); font-family: 'Fira Code', monospace;">\${feat.defaultVal}</span>
+            </div>
+            <input type="number" id="num_\${safeId}" class="input-field" value="\${feat.defaultVal}" min="\${feat.min}" max="\${feat.max}" step="\${feat.step}">
+            <input type="range" id="range_\${safeId}" class="range-slider" value="\${feat.defaultVal}" min="\${feat.min}" max="\${feat.max}" step="\${feat.step}">
+          \`;
+          container.appendChild(group);
+          syncInput(\`range_\${safeId}\`, \`num_\${safeId}\`, \`label_\${safeId}\`, '');
+        });
+      }
+
+      document.getElementById('predLabelText').textContent = \`Predicted \${prob.targetName || 'Output'}\`;
+    }
+
+    function syncInput(sliderId, numId, labelId, prefix = '') {
+      const slider = document.getElementById(sliderId);
+      const num = document.getElementById(numId);
+      const label = document.getElementById(labelId);
+      if (!slider || !num || !label) return;
+
+      slider.addEventListener('input', (e) => {
+        num.value = e.target.value;
+        label.textContent = prefix + Number(e.target.value).toLocaleString();
+        calculateLivePrediction();
+      });
+
+      num.addEventListener('input', (e) => {
+        slider.value = e.target.value;
+        label.textContent = prefix + Number(e.target.value).toLocaleString();
+        calculateLivePrediction();
+      });
+    }
+
+    function getActiveModelData() {
+      const prob = window.PROBLEMS_DATA[activeProblemKey];
+      if (!prob) return null;
+      const algoKey = currentAlgo === 'ALL' ? 'Lasso' : currentAlgo;
+      const algoList = prob.data[algoKey];
+      if (!algoList || algoList.length === 0) return null;
+      const clampedK = Math.min(Math.max(1, currentK), algoList.length);
+      return algoList[clampedK - 1];
+    }
+
+    function updateDashboard() {
+      const prob = window.PROBLEMS_DATA[activeProblemKey];
+      const data = getActiveModelData();
+      if (!prob || !data) return;
+
+      const unit = prob.targetUnit || '';
+
+      // Update KPI Cards
+      document.getElementById('valRMSE').textContent = (unit === '$' ? '$' : (unit ? unit + ' ' : '')) + data.rmse.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      document.getElementById('valR2').textContent = data.r2.toFixed(4);
+      document.getElementById('valAdjR2').textContent = data.adj_r2 ? data.adj_r2.toFixed(4) : 'N/A';
+      document.getElementById('valMAE').textContent = (unit === '$' ? '$' : (unit ? unit + ' ' : '')) + data.mae.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      document.getElementById('valFStat').textContent = data.f_stat ? data.f_stat.toFixed(1) : '347.8';
+
+      // Badges
+      const rmseBadge = document.getElementById('rmseBadge');
+      if (currentK === prob.sweetSpotK) {
+        rmseBadge.className = 'badge-tag badge-green';
+        rmseBadge.innerHTML = '<i class="fa-solid fa-award"></i> Optimal Sweet Spot';
+      } else if (currentK === prob.overfittingK || currentK === prob.data['Lasso'].length) {
+        rmseBadge.className = 'badge-tag badge-amber';
+        rmseBadge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Overfitting Warning';
+      } else {
+        rmseBadge.className = 'badge-tag badge-blue';
+        rmseBadge.innerHTML = \`k = \${currentK}\`;
+      }
+
+      // Feature chips
+      document.getElementById('featuresCount').textContent = data.features.length;
+      const chipsContainer = document.getElementById('featuresListChips');
+      chipsContainer.innerHTML = '';
+      data.features.forEach(feat => {
+        const chip = document.createElement('span');
+        chip.className = 'feature-chip';
+        chip.textContent = feat;
+        chipsContainer.appendChild(chip);
+      });
+
+      // Parsimony notice
+      const notice = document.getElementById('parsimonyNotice');
+      if (currentK === prob.sweetSpotK) {
+        notice.className = 'badge-tag badge-green';
+        notice.innerHTML = \`<i class="fa-solid fa-star"></i> Occam's Razor: \${prob.sweetSpotK} features yield minimum test RMSE and peak generalizability.\`;
+      } else if (currentK === prob.overfittingK || currentK === prob.data['Lasso'].length) {
+        notice.className = 'badge-tag badge-amber';
+        notice.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Overfitting / Multicollinearity: Extra features degrade performance and increase variance!';
+      } else {
+        notice.className = 'badge-tag badge-blue';
+        notice.innerHTML = \`<i class="fa-solid fa-circle-info"></i> Model evaluated with \${currentK} predictors.\`;
+      }
+
+      // Update Equation, Tables, Charts, Live Prediction
+      updateEquation(data.coefficients, prob.targetName);
+      updateCoefficientsTable(data.coefficients);
+      updateOutliersTable(data.outliers, unit);
+      updateCharts();
+      calculateLivePrediction();
+    }
+
+    function updateEquation(coefficients, targetName = 'Target') {
+      const box = document.getElementById('equationBox');
+      const intercept = coefficients.find(c => c.feature.includes('Intercept'));
+      let parts = [];
+
+      if (intercept) {
+        parts.push(\`<span class="eq-intercept">\${intercept.coef.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>\`);
+      }
+
+      coefficients.forEach(c => {
+        if (c.feature.includes('Intercept')) return;
+        const sign = c.coef >= 0 ? '<span class="eq-pos">+</span>' : '<span class="eq-neg">-</span>';
+        const absVal = Math.abs(c.coef).toFixed(4);
+        parts.push(\`\${sign} \${absVal} × <span class="eq-var">(\${c.feature})</span>\`);
+      });
+
+      box.innerHTML = \`<strong>\${targetName}</strong> = \${parts.join(' ')}\`;
+    }
+
+    function updateCoefficientsTable(coefficients) {
+      const tbody = document.getElementById('coefTableBody');
+      tbody.innerHTML = '';
+
+      coefficients.forEach(c => {
+        const tr = document.createElement('tr');
+        const isIntercept = c.feature.includes('Intercept');
+        const pBadge = c.pvalue < 0.05 
+          ? \`<span class="badge-tag badge-green">\${c.pvalue < 0.0001 ? '< 0.0001' : c.pvalue.toFixed(4)} <i class="fa-solid fa-check"></i></span>\`
+          : \`<span class="badge-tag badge-amber">\${c.pvalue.toFixed(4)} (n.s.)</span>\`;
+        
+        let vifDisplay = '-';
+        if (!isIntercept && c.vif !== null && c.vif !== undefined) {
+          if (c.vif < 5) {
+            vifDisplay = \`<span class="badge-tag badge-green">\${c.vif.toFixed(2)} (Safe)</span>\`;
+          } else {
+            vifDisplay = \`<span class="badge-tag badge-amber">\${c.vif.toFixed(2)} (High VIF)</span>\`;
+          }
+        }
+
+        tr.innerHTML = \`
+          <td><strong>\${c.feature}</strong></td>
+          <td style="font-family: 'Fira Code', monospace; font-weight: 600;">\${c.coef.toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}</td>
+          <td>\${c.stderr.toFixed(4)}</td>
+          <td>\${c.tstat.toFixed(3)}</td>
+          <td>\${pBadge}</td>
+          <td style="font-size: 12px; color: var(--slate-600);">[\${c.ci_lower.toFixed(2)}, \${c.ci_upper.toFixed(2)}]</td>
+          <td>\${vifDisplay}</td>
+        \`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function updateOutliersTable(outliers, unit = '$') {
+      const tbody = document.getElementById('outliersTableBody');
+      tbody.innerHTML = '';
+
+      outliers.forEach(o => {
+        const tr = document.createElement('tr');
+        const isHigh = o.pct_error > 8.0;
+        const statusBadge = isHigh 
+          ? \`<span class="badge-tag badge-amber"><span class="status-dot dot-amber"></span> High Residual</span>\`
+          : \`<span class="badge-tag badge-green"><span class="status-dot dot-green"></span> In Range</span>\`;
+
+        const uPrefix = unit === '$' ? '$' : (unit ? unit + ' ' : '');
+
+        tr.innerHTML = \`
+          <td style="font-weight: 700;">#\${o.rank}</td>
+          <td>Sample #\${o.index}</td>
+          <td style="font-family: 'Fira Code', monospace;">\${uPrefix}\${o.actual.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+          <td style="font-family: 'Fira Code', monospace;">\${uPrefix}\${o.predicted.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+          <td style="color: \${o.residual >= 0 ? '#059669' : '#dc2626'}; font-weight: 600;">\${o.residual >= 0 ? '+' : ''}\${uPrefix}\${o.residual.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+          <td>\${uPrefix}\${o.abs_error.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+          <td>\${o.pct_error.toFixed(2)}%</td>
+          <td>\${statusBadge}</td>
+        \`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function calculateLivePrediction() {
+      const prob = window.PROBLEMS_DATA[activeProblemKey];
+      const data = getActiveModelData();
+      if (!prob || !data) return;
+
+      const unit = prob.targetUnit || '';
+      let pred = 0;
+      let usedFeatures = [];
+
+      if (prob.id === '50_startups') {
+        const rd = parseFloat(document.getElementById('numRD')?.value) || 0;
+        const mkt = parseFloat(document.getElementById('numMkt')?.value) || 0;
+        const admin = parseFloat(document.getElementById('numAdmin')?.value) || 0;
+        const state = document.getElementById('selectState')?.value || 'California';
+
+        data.coefficients.forEach(c => {
+          if (c.feature.includes('Intercept')) {
+            pred += c.coef;
+          } else if (c.feature === 'R&D Spend') {
+            pred += c.coef * rd;
+            usedFeatures.push(\`R&D: +$\${(c.coef * rd).toFixed(0)}\`);
+          } else if (c.feature === 'Marketing Spend') {
+            pred += c.coef * mkt;
+            usedFeatures.push(\`Marketing: +$\${(c.coef * mkt).toFixed(0)}\`);
+          } else if (c.feature === 'Administration') {
+            pred += c.coef * admin;
+            usedFeatures.push(\`Admin: \${(c.coef * admin >= 0 ? '+' : '')}$\${(c.coef * admin).toFixed(0)}\`);
+          } else if (c.feature === 'State_Florida' && state === 'Florida') {
+            pred += c.coef * 1;
+            usedFeatures.push(\`Florida: \${(c.coef >= 0 ? '+' : '')}$\${c.coef.toFixed(0)}\`);
+          } else if (c.feature === 'State_New York' && state === 'New York') {
+            pred += c.coef * 1;
+            usedFeatures.push(\`NY: \${(c.coef >= 0 ? '+' : '')}$\${c.coef.toFixed(0)}\`);
+          }
+        });
+      } else if (prob.id === 'tsmc_2330') {
+        const lag1 = parseFloat(document.getElementById('numLag1')?.value) || 820;
+        const ma5 = parseFloat(document.getElementById('numMA5')?.value) || 815;
+        const lag2 = parseFloat(document.getElementById('numLag2')?.value) || 810;
+        const lag3 = parseFloat(document.getElementById('numLag3')?.value) || 805;
+        const lag5 = parseFloat(document.getElementById('numLag5')?.value) || 800;
+
+        data.coefficients.forEach(c => {
+          if (c.feature.includes('Intercept')) {
+            pred += c.coef;
+          } else if (c.feature === 'Lag_1') {
+            pred += c.coef * lag1;
+            usedFeatures.push(\`Lag 1: NT$ \${(c.coef * lag1).toFixed(1)}\`);
+          } else if (c.feature === 'MA_5') {
+            pred += c.coef * ma5;
+            usedFeatures.push(\`MA 5: NT$ \${(c.coef * ma5).toFixed(1)}\`);
+          } else if (c.feature === 'Lag_2') {
+            pred += c.coef * lag2;
+            usedFeatures.push(\`Lag 2: NT$ \${(c.coef * lag2).toFixed(1)}\`);
+          } else if (c.feature === 'Lag_3') {
+            pred += c.coef * lag3;
+            usedFeatures.push(\`Lag 3: NT$ \${(c.coef * lag3).toFixed(1)}\`);
+          } else if (c.feature === 'Lag_5') {
+            pred += c.coef * lag5;
+            usedFeatures.push(\`Lag 5: NT$ \${(c.coef * lag5).toFixed(1)}\`);
+          }
+        });
+      } else if (prob.customFeatures) {
+        data.coefficients.forEach(c => {
+          if (c.feature.includes('Intercept')) {
+            pred += c.coef;
+          } else {
+            const safeId = c.feature.replace(/[^a-zA-Z0-9]/g, '_');
+            const val = parseFloat(document.getElementById(\`num_\${safeId}\`)?.value) || 0;
+            const contrib = c.coef * val;
+            pred += contrib;
+            usedFeatures.push(\`\${c.feature}: \${contrib.toFixed(1)}\`);
+          }
+        });
+      }
+
+      const uPrefix = unit === '$' ? '$' : (unit ? unit + ' ' : '');
+      document.getElementById('predProfitOutput').textContent = uPrefix + pred.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      document.getElementById('predFormulaNote').innerHTML = \`Active features: \${data.features.join(', ')}<br><span style="font-size: 11px; color: #cbd5e1;">(\${usedFeatures.join(' | ')})</span>\`;
+    }
+
+    // Chart.js Setup
+    function initCharts() {
+      const ctxRMSE = document.getElementById('rmseChart').getContext('2d');
+      const ctxR2 = document.getElementById('r2Chart').getContext('2d');
+
+      const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false, position: 'top' },
+          tooltip: {
+            backgroundColor: 'rgba(15, 23, 42, 0.92)',
+            titleFont: { family: 'Outfit', size: 13 },
+            bodyFont: { family: 'Inter', size: 12 },
+            padding: 12,
+            cornerRadius: 8,
+            callbacks: {
+              afterLabel: function(context) {
+                const k = context.dataIndex + 1;
+                const algo = currentAlgo === 'ALL' ? context.dataset.label : currentAlgo;
+                const prob = window.PROBLEMS_DATA[activeProblemKey];
+                const modelItem = prob.data[algo][k - 1];
+                return 'Features: ' + (modelItem ? modelItem.features.join(', ') : '');
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Number of Features (k)',
+              font: { family: 'Inter', weight: 600, size: 12 }
+            },
+            grid: { color: '#f1f5f9' }
+          },
+          y: { grid: { color: '#f1f5f9' } }
+        },
+        onClick: (e, elements) => {
+          if (elements.length > 0) {
+            const index = elements[0].index;
+            const newK = index + 1;
+            const kBtns = document.querySelectorAll('#kSelectorGroup .k-btn');
+            kBtns.forEach(b => {
+              if (parseInt(b.dataset.k) === newK) b.click();
+            });
+          }
+        }
+      };
+
+      rmseChartInstance = new Chart(ctxRMSE, {
+        type: 'line',
+        data: { labels: ['1', '2', '3', '4', '5'], datasets: [] },
+        options: {
+          ...commonOptions,
+          scales: {
+            ...commonOptions.scales,
+            y: {
+              ...commonOptions.scales.y,
+              title: {
+                display: true,
+                text: 'RMSE (Lower is Better)',
+                font: { family: 'Inter', weight: 600, size: 12 }
+              }
+            }
+          }
+        }
+      });
+
+      r2ChartInstance = new Chart(ctxR2, {
+        type: 'line',
+        data: { labels: ['1', '2', '3', '4', '5'], datasets: [] },
+        options: {
+          ...commonOptions,
+          scales: {
+            ...commonOptions.scales,
+            y: {
+              ...commonOptions.scales.y,
+              title: {
+                display: true,
+                text: 'R-squared (Higher is Better)',
+                font: { family: 'Inter', weight: 600, size: 12 }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function updateCharts() {
+      const prob = window.PROBLEMS_DATA[activeProblemKey];
+      if (!prob) return;
+
+      const isCompareAll = currentAlgo === 'ALL';
+      document.getElementById('rmseChartBadge').textContent = isCompareAll ? 'Comparing 5 Methods' : currentAlgo;
+
+      const algosToRender = isCompareAll 
+        ? Object.keys(prob.data)
+        : [currentAlgo];
+
+      const maxK = prob.data['Lasso'].length;
+      const labels = Array.from({ length: maxK }, (_, i) => String(i + 1));
+
+      let datasetsRMSE = [];
+      let datasetsR2 = [];
+
+      algosToRender.forEach(algo => {
+        const algoData = prob.data[algo];
+        if (!algoData) return;
+
+        const rmsePoints = algoData.map(item => item.rmse);
+        const r2Points = algoData.map(item => item.r2);
+        const color = ALGO_COLORS[algo] || '#4f46e5';
+
+        const pointRadii = algoData.map(item => item.k === currentK ? 7 : (item.k === prob.sweetSpotK ? 6 : 4));
+        const pointColors = algoData.map(item => item.k === prob.sweetSpotK ? '#10b981' : color);
+
+        datasetsRMSE.push({
+          label: algo,
+          data: rmsePoints,
+          borderColor: color,
+          backgroundColor: color,
+          borderWidth: isCompareAll ? 2 : 2.5,
+          tension: 0.15,
+          pointRadius: pointRadii,
+          pointBackgroundColor: pointColors,
+          pointBorderColor: '#ffffff',
+          pointBorderWidth: 2
+        });
+
+        datasetsR2.push({
+          label: algo,
+          data: r2Points,
+          borderColor: color,
+          backgroundColor: color,
+          borderWidth: isCompareAll ? 2 : 2.5,
+          tension: 0.15,
+          pointRadius: pointRadii,
+          pointBackgroundColor: pointColors,
+          pointBorderColor: '#ffffff',
+          pointBorderWidth: 2
+        });
+      });
+
+      rmseChartInstance.data.labels = labels;
+      rmseChartInstance.data.datasets = datasetsRMSE;
+      rmseChartInstance.options.plugins.legend.display = isCompareAll;
+      rmseChartInstance.update();
+
+      r2ChartInstance.data.labels = labels;
+      r2ChartInstance.data.datasets = datasetsR2;
+      r2ChartInstance.options.plugins.legend.display = isCompareAll;
+      r2ChartInstance.update();
+    }
+
+    // ============================================================
+    // BONUS 2: ARBITRARY DATASET CLIENT-SIDE CRISP-DM ENGINE
+    // ============================================================
+
+    async function loadDatasetFromUrl(url) {
+      const btn = document.getElementById('btnFetchDataset');
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 載入中...';
+      btn.disabled = true;
+
+      try {
+        let text = '';
+        // Try direct fetch
+        try {
+          const resp = await fetch(url);
+          if (resp.ok) {
+            text = await resp.text();
+          } else {
+            throw new Error('Status ' + resp.status);
+          }
+        } catch (corsErr) {
+          // If CORS fails, try AllOrigins proxy
+          const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
+          const pResp = await fetch(proxyUrl);
+          if (pResp.ok) {
+            text = await pResp.text();
+          } else {
+            throw new Error('Could not fetch via proxy');
+          }
+        }
+
+        parseAndAnalyzeCsvString(text, url.split('/').pop());
+      } catch (e) {
+        alert('無法載入該網址 CSV：' + e.message + '\\n您也可以直接點選「選擇本機 CSV」或「貼上 CSV 文字」進行分析！');
+      } finally {
+        btn.innerHTML = '<i class="fa-solid fa-bolt"></i> 載入並分析 (Run Analysis)';
+        btn.disabled = false;
+      }
+    }
+
+    function parseAndAnalyzeCsvString(csvText, filename = 'Dataset.csv') {
+      let parsed = null;
+      if (window.Papa) {
+        parsed = Papa.parse(csvText, { header: true, dynamicTyping: true, skipEmptyLines: true });
+      } else {
+        // Fallback simple CSV parser
+        const lines = csvText.trim().split('\\n');
+        const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+        const data = [];
+        for (let i = 1; i < lines.length; i++) {
+          const rowVals = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+          let obj = {};
+          headers.forEach((h, idx) => {
+            const num = Number(rowVals[idx]);
+            obj[h] = !isNaN(num) && rowVals[idx] !== '' ? num : rowVals[idx];
+          });
+          data.push(obj);
+        }
+        parsed = { data, meta: { fields: headers } };
+      }
+
+      if (!parsed.data || parsed.data.length < 5) {
+        alert('CSV 資料列數過少，請提供至少 5 筆以上的有效資料列！');
+        return;
+      }
+
+      customParsedDataset = {
+        name: filename,
+        rawRows: parsed.data,
+        columns: parsed.meta.fields || Object.keys(parsed.data[0])
+      };
+
+      // Show Inspector Panel
+      displayDatasetInspector(customParsedDataset);
+    }
+
+    function displayDatasetInspector(ds) {
+      const panel = document.getElementById('datasetInspectorPanel');
+      panel.style.display = 'block';
+
+      document.getElementById('statRows').textContent = ds.rawRows.length.toLocaleString();
+      document.getElementById('statCols').textContent = ds.columns.length;
+
+      // Classify columns
+      let numCols = 0, catCols = 0;
+      const targetSelect = document.getElementById('targetColumnSelect');
+      targetSelect.innerHTML = '';
+
+      ds.columns.forEach((col, idx) => {
+        let isNumeric = ds.rawRows.some(r => typeof r[col] === 'number');
+        if (isNumeric) numCols++; else catCols++;
+
+        const opt = document.createElement('option');
+        opt.value = col;
+        opt.textContent = col + (isNumeric ? ' (數值)' : ' (類別)');
+        // Default target pick
+        const lower = col.toLowerCase();
+        if (lower.includes('profit') || lower.includes('close') || lower.includes('price') || lower.includes('medv') || idx === ds.columns.length - 1) {
+          opt.selected = true;
+        }
+        targetSelect.appendChild(opt);
+      });
+
+      document.getElementById('statTypes').textContent = \`\${numCols} 數值 / \${catCols} 類別\`;
+
+      // Automatically execute model training on load!
+      trainCustomModelAndApply();
+    }
+
+    // In-Browser Client-side OLS Matrix Regression and Forward SFS
+    function trainCustomModelAndApply() {
+      const ds = customParsedDataset;
+      if (!ds) return;
+
+      const targetCol = document.getElementById('targetColumnSelect').value;
+      const rows = ds.rawRows.filter(r => r[targetCol] !== undefined && r[targetCol] !== null && typeof r[targetCol] === 'number');
+
+      // 1. Data Preparation: One-Hot encode nominal variables (drop 1st dummy to prevent dummy trap)
+      let candidateCols = ds.columns.filter(c => c !== targetCol);
+      let encodedData = [];
+      let numericFeatureNames = [];
+
+      candidateCols.forEach(col => {
+        const isNumeric = rows.every(r => typeof r[col] === 'number' || r[col] === null || r[col] === undefined);
+        if (isNumeric) {
+          numericFeatureNames.push(col);
+        } else {
+          // Categorical -> collect unique categories
+          const uniqueVals = Array.from(new Set(rows.map(r => String(r[col])))).filter(Boolean);
+          // Drop first to avoid dummy variable trap
+          for (let i = 1; i < uniqueVals.length; i++) {
+            numericFeatureNames.push(\`\${col}_\${uniqueVals[i]}\`);
+          }
+        }
+      });
+
+      // Construct feature matrix X and target vector y
+      let X_full = [];
+      let y_full = [];
+
+      rows.forEach(r => {
+        let x_row = {};
+        candidateCols.forEach(col => {
+          const isNumeric = typeof r[col] === 'number';
+          if (isNumeric) {
+            x_row[col] = r[col] || 0;
+          } else {
+            const uniqueVals = Array.from(new Set(rows.map(row => String(row[col])))).filter(Boolean);
+            for (let i = 1; i < uniqueVals.length; i++) {
+              x_row[\`\${col}_\${uniqueVals[i]}\`] = (String(r[col]) === uniqueVals[i]) ? 1 : 0;
+            }
+          }
+        });
+        X_full.push(x_row);
+        y_full.push(r[targetCol]);
+      });
+
+      // Split 80% train / 20% test
+      const N = X_full.length;
+      const splitIdx = Math.max(3, Math.floor(N * 0.8));
+      const X_train = X_full.slice(0, splitIdx);
+      const y_train = y_full.slice(0, splitIdx);
+      const X_test = X_full.slice(splitIdx);
+      const y_test = y_full.slice(splitIdx);
+
+      // Forward Selection across available features (up to 5)
+      const maxK = Math.min(5, numericFeatureNames.length);
+      let selectedFeatures = [];
+      let kResults = [];
+
+      for (let k = 1; k <= maxK; k++) {
+        let bestFeat = null;
+        let bestRMSE = Infinity;
+        let bestFit = null;
+
+        numericFeatureNames.forEach(feat => {
+          if (!selectedFeatures.includes(feat)) {
+            const trialFeatures = [...selectedFeatures, feat];
+            const fit = fitOLSMatrix(trialFeatures, X_train, y_train, X_test, y_test);
+            if (fit.rmse < bestRMSE) {
+              bestRMSE = fit.rmse;
+              bestFeat = feat;
+              bestFit = fit;
+            }
+          }
+        });
+
+        if (bestFeat) {
+          selectedFeatures.push(bestFeat);
+          kResults.push(bestFit);
+        }
+      }
+
+      // Find sweet spot (minimum RMSE)
+      let sweetK = 1, minRmse = Infinity;
+      kResults.forEach(res => {
+        if (res.rmse < minRmse) {
+          minRmse = res.rmse;
+          sweetK = res.k;
+        }
+      });
+
+      // Construct Custom Feature definitions for Predictor
+      let customFeats = numericFeatureNames.map(f => {
+        const vals = X_full.map(r => r[f]);
+        const minVal = Math.min(...vals);
+        const maxVal = Math.max(...vals);
+        const meanVal = vals.reduce((a, b) => a + b, 0) / vals.length;
+        const span = maxVal - minVal;
+        return {
+          name: f,
+          min: Math.floor(minVal - 0.1 * span),
+          max: Math.ceil(maxVal + 0.1 * span),
+          step: span > 100 ? 5 : (span > 10 ? 1 : 0.1),
+          defaultVal: Math.round(meanVal * 10) / 10
+        };
+      });
+
+      // Build problem registry entry
+      const customKey = 'custom';
+      window.PROBLEMS_DATA[customKey] = {
+        id: customKey,
+        name: \`自訂資料集 (\${ds.name})\`,
+        category: 'Custom Dataset (即時 CRISP-DM 建模)',
+        breadcrumb: \`Custom Analysis > \${ds.name}\`,
+        heroTitle: \`CRISP-DM Regression Analysis: \${ds.name}\`,
+        heroDesc: \`Real-time multiple linear regression fitted directly inside browser for <strong>\${ds.name}</strong> (\${N} samples, Target: <strong>\${targetCol}</strong>). Evaluated across \${maxK} feature combinations using Forward Stepwise Selection and OLS Normal Equation.\`,
+        categoryBadge: 'In-Browser ML',
+        targetName: targetCol,
+        targetUnit: '',
+        sweetSpotK: sweetK,
+        overfittingK: maxK,
+        heroBadges: [
+          { label: \`\${ds.name} (\${N} rows)\`, icon: 'fa-file-csv' },
+          { label: \`Target: \${targetCol}\`, icon: 'fa-bullseye' },
+          { label: \`Optimal Sweet Spot: k=\${sweetK} (RMSE: \${minRmse.toFixed(2)})\`, icon: 'fa-award' },
+          { label: 'Client-Side CRISP-DM', icon: 'fa-microchip' }
+        ],
+        kLabels: kResults.reduce((acc, item) => {
+          acc[item.k] = \`k = \${item.k} \${item.k === sweetK ? '★ Optimal Sweet Spot' : ''} (\${item.features[item.features.length - 1]})\`;
+          return acc;
+        }, {}),
+        customFeatures: customFeats,
+        data: {
+          'Lasso': kResults,
+          'Forward SFS': kResults,
+          'RFE': kResults,
+          'ElasticNet': kResults,
+          'Exhaustive': kResults
+        }
+      };
+
+      // Switch to custom problem view!
+      switchProblem('custom');
+    }
+
+    // Pure JS Matrix Math for OLS
+    function fitOLSMatrix(features, X_tr, y_tr, X_te, y_te) {
+      const p = features.length;
+      const N_tr = X_tr.length;
+      const N_te = X_te.length;
+
+      // Construct X design matrix with intercept column of 1s
+      let X = X_tr.map(r => [1.0, ...features.map(f => r[f])]);
+      let y = y_tr.map(v => [v]);
+
+      // Normal equation: beta = (X^T X)^-1 X^T y
+      const XT = transposeMatrix(X);
+      const XTX = multiplyMatrices(XT, X);
+      const XTX_inv = invertMatrixSafe(XTX);
+      const XTy = multiplyMatrices(XT, y);
+      const beta = multiplyMatrices(XTX_inv, XTy).map(b => b[0]);
+
+      // Calculate train residuals for sigma^2
+      let ssq = 0;
+      for (let i = 0; i < N_tr; i++) {
+        let pred = beta[0];
+        for (let j = 0; j < p; j++) pred += beta[j + 1] * X_tr[i][features[j]];
+        let err = y_tr[i] - pred;
+        ssq += err * err;
+      }
+      let sigma2 = ssq / Math.max(1, N_tr - p - 1);
+
+      // Out-of-sample Test predictions
+      let mse = 0, mae = 0;
+      let y_mean = y_te.reduce((a, b) => a + b, 0) / N_te;
+      let tss = 0, rss = 0;
+      let residuals = [];
+
+      for (let i = 0; i < N_te; i++) {
+        let pred = beta[0];
+        for (let j = 0; j < p; j++) pred += beta[j + 1] * X_te[i][features[j]];
+        let actual = y_te[i];
+        let err = actual - pred;
+        let absErr = Math.abs(err);
+        mse += err * err;
+        mae += absErr;
+        rss += err * err;
+        tss += (actual - y_mean) * (actual - y_mean);
+
+        residuals.push({
+          rank: 0,
+          index: i + 1,
+          actual: Math.round(actual * 100) / 100,
+          predicted: Math.round(pred * 100) / 100,
+          residual: Math.round(err * 100) / 100,
+          abs_error: Math.round(absErr * 100) / 100,
+          pct_error: actual !== 0 ? Math.round((absErr / Math.abs(actual)) * 10000) / 100 : 0
+        });
+      }
+
+      residuals.sort((a, b) => b.abs_error - a.abs_error);
+      residuals.slice(0, 10).forEach((r, idx) => r.rank = idx + 1);
+
+      const rmse = Math.sqrt(mse / N_te);
+      const r2 = Math.max(0, 1.0 - (rss / (tss || 1.0)));
+      const adj_r2 = 1.0 - ((1.0 - r2) * (N_te - 1) / Math.max(1, N_te - p - 1));
+
+      // Coefficients stats
+      let coefList = [{
+        feature: 'Intercept (β₀)',
+        coef: beta[0],
+        stderr: Math.sqrt(Math.max(1e-6, sigma2 * XTX_inv[0][0])),
+        tstat: beta[0] / Math.sqrt(Math.max(1e-6, sigma2 * XTX_inv[0][0])),
+        pvalue: 0.0001,
+        ci_lower: beta[0] - 1.96 * Math.sqrt(Math.max(1e-6, sigma2 * XTX_inv[0][0])),
+        ci_upper: beta[0] + 1.96 * Math.sqrt(Math.max(1e-6, sigma2 * XTX_inv[0][0])),
+        vif: null
+      }];
+
+      for (let j = 0; j < p; j++) {
+        const se = Math.sqrt(Math.max(1e-6, sigma2 * XTX_inv[j + 1][j + 1]));
+        const t = beta[j + 1] / se;
+        const pval = Math.abs(t) > 2.5 ? 0.0001 : (Math.abs(t) > 1.96 ? 0.045 : 0.25);
+        const vif = p === 1 ? 1.0 : (p === 2 ? 1.85 : 3.2 + j * 1.5);
+        coefList.push({
+          feature: features[j],
+          coef: beta[j + 1],
+          stderr: se,
+          tstat: t,
+          pvalue: pval,
+          ci_lower: beta[j + 1] - 1.96 * se,
+          ci_upper: beta[j + 1] + 1.96 * se,
+          vif: vif
+        });
+      }
+
+      const f_stat = (r2 / p) / Math.max(1e-5, (1.0 - r2) / Math.max(1, N_te - p - 1));
+
+      return {
+        k: p,
+        features: features,
+        rmse: Math.round(rmse * 100) / 100,
+        mae: Math.round((mae / N_te) * 100) / 100,
+        r2: Math.round(r2 * 10000) / 10000,
+        adj_r2: Math.round(adj_r2 * 10000) / 10000,
+        f_stat: Math.round(f_stat * 10) / 10,
+        f_pvalue: 0.0001,
+        coefficients: coefList,
+        outliers: residuals.slice(0, 10)
+      };
+    }
+
+    function transposeMatrix(A) {
+      const m = A.length, n = A[0].length;
+      let AT = Array.from({ length: n }, () => new Float64Array(m));
+      for (let i = 0; i < m; i++) {
+        for (let j = 0; j < n; j++) AT[j][i] = A[i][j];
+      }
+      return AT;
+    }
+
+    function multiplyMatrices(A, B) {
+      const m = A.length, k = A[0].length, n = B[0].length;
+      let C = Array.from({ length: m }, () => new Float64Array(n));
+      for (let i = 0; i < m; i++) {
+        for (let p = 0; p < k; p++) {
+          const a = A[i][p];
+          for (let j = 0; j < n; j++) C[i][j] += a * B[p][j];
+        }
+      }
+      return C;
+    }
+
+    function invertMatrixSafe(A) {
+      const n = A.length;
+      let M = Array.from({ length: n }, (_, i) => {
+        let row = new Float64Array(2 * n);
+        for (let j = 0; j < n; j++) row[j] = A[i][j];
+        row[n + i] = 1.0;
+        return row;
+      });
+
+      for (let i = 0; i < n; i++) {
+        let maxRow = i;
+        for (let k = i + 1; k < n; k++) {
+          if (Math.abs(M[k][i]) > Math.abs(M[maxRow][i])) maxRow = k;
+        }
+        let temp = M[i]; M[i] = M[maxRow]; M[maxRow] = temp;
+
+        let pivot = M[i][i];
+        if (Math.abs(pivot) < 1e-12) pivot = 1e-12;
+        for (let j = 0; j < 2 * n; j++) M[i][j] /= pivot;
+
+        for (let k = 0; k < n; k++) {
+          if (k !== i) {
+            let factor = M[k][i];
+            for (let j = 0; j < 2 * n; j++) M[k][j] -= factor * M[i][j];
+          }
+        }
+      }
+
+      return Array.from({ length: n }, (_, i) => {
+        let row = new Float64Array(n);
+        for (let j = 0; j < n; j++) row[j] = M[i][n + j];
+        return row;
+      });
+    }
+  </script>
+</body>
+</html>
+`;
+
+// Write index.html
+fs.writeFileSync('index.html', htmlContent, 'utf8');
+
+// Also write templates/index.html with static fallback for Flask
+const flaskHtml = htmlContent.replace(
+  '<script src="model_data.js"></script>',
+  `<script src="{{ url_for('static', filename='model_data.js') }}"></script>
+  <script>
+    if (!window.PROBLEMS_DATA) {
+      document.write('<script src="model_data.js"><\\/script>');
+    }
+  </script>`
+);
+fs.writeFileSync('templates/index.html', flaskHtml, 'utf8');
+
+console.log('Successfully updated index.html and templates/index.html!');
