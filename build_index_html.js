@@ -1078,7 +1078,7 @@ const htmlContent = `<!DOCTYPE html>
           </select>
         </div>
 
-        <a href="https://github.com/jiajun1014/AIoT-DIC2-MultipleLR" target="_blank" class="ref-btn">
+        <a href="https://github.com/jiajun1014/DIC-2-kaggle" target="_blank" class="ref-btn">
           <i class="fa-brands fa-github"></i> GitHub Repo
         </a>
         <a href="https://statsunlock.com/multiple-linear-regression-calculator/" target="_blank" class="ref-btn">
